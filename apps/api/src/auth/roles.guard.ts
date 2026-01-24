@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role, Permission, RolePermissions } from '../../../libs/data/src';
+import { Role, Permission, RolePermissions } from '../shared/types';
 
 export const ROLES_KEY = 'roles';
 export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);

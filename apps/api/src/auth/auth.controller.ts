@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, UseGuards, Request, SetMetadata } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from '../../../libs/data/src';
+import { LoginDto, RegisterDto } from '../shared/types';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 export const Public = () => SetMetadata('isPublic', true);

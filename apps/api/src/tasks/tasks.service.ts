@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Task, User, Organization } from '../entities';
-import { CreateTaskDto, UpdateTaskDto, Role, Permission, RolePermissions } from '../../../libs/data/src';
+import { CreateTaskDto, UpdateTaskDto, Role, Permission, RolePermissions } from '../shared/types';
 import { AuditService } from '../audit/audit.service';
 
 @Injectable()

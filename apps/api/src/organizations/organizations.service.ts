@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Organization, User } from '../entities';
-import { Role, Permission, RolePermissions } from '../../../libs/data/src';
+import { Role, Permission, RolePermissions } from '../shared/types';
 
 @Injectable()
 export class OrganizationsService {

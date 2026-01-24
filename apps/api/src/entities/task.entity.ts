@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { TaskStatus, TaskCategory } from '../../../libs/data/src';
+import { TaskStatus, TaskCategory } from '../shared/types';
 import { User } from './user.entity';
 import { Organization } from './organization.entity';
 
