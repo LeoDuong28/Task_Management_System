@@ -23,13 +23,22 @@ jobs:
         
       - name: Build
         working-directory: ./apps/dashboard
-        run: npx ng build --configuration=production --base-href /${{ github.event.repository.name }}/
+        run: |
+          npm install -g @angular/cli
+          ng build --configuration=production --base-href /Task_Management_System/
+          
+      - name: List build output
+        run: |
+          ls -la ./apps/dashboard/dist/ || echo "dist not found"
+          find ./apps/dashboard -name "index.html" -type f
         
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./apps/dashboard/dist/dashboard/browser
+          force_orphan: true
+
 
 
 
