@@ -1,0 +1,23 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "3000:3000"
+    environment:
+      # Railway will set PORT automatically in production; this is for local
+      PORT: 3000
+      NODE_ENV: development
+      DB_PATH: /tmp/taskdb.sqlite
+      JWT_SECRET: change-me
+      JWT_EXPIRY: 24h
+      CORS_ORIGIN: http://localhost:8080
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    ports:
+      - "8080:80"
+    depends_on:
+      - api

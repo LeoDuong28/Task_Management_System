@@ -1,54 +1,44 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
-import { Organization, User } from '../entities';
-import { Role, Permission, RolePermissions } from '../shared/types';
+import { Repository } from 'typeorm';
+import { Organization } from './organization.entity';
+import { IOrganization, JwtPayload } from '@libs/data';
 
 @Injectable()
 export class OrganizationsService {
   constructor(
     @InjectRepository(Organization)
-    private orgRepository: Repository<Organization>
+    private orgRepo: Repository<Organization>
   ) {}
 
-  async findAll(currentUser: User) {
-    if (currentUser.role === Role.OWNER) {
-      return this.orgRepository.find({
-        where: [
-          { id: currentUser.organizationId },
-          { parentId: currentUser.organizationId }
-        ],
-        relations: ['parent', 'children']
-      });
+  async findOne(id: string): Promise<IOrganization> {
+    const org = await this.orgRepo.findOne({
+      where: { id },
+      relations: ['children'],
+    });
+
+    if (!org) {
+      throw new NotFoundException('Organization not found');
     }
 
-    return this.orgRepository.find({
-      where: { id: currentUser.organizationId },
-      relations: ['parent']
-    });
+    return org;
   }
 
-  async create(name: string, currentUser: User) {
-    if (currentUser.role !== Role.OWNER) {
-      throw new ForbiddenException('Only owners can create child organizations');
-    }
+  async findUserOrganization(user: JwtPayload): Promise<IOrganization> {
+    return this.findOne(user.organizationId);
+  }
 
-    const org = this.orgRepository.create({
+  async createSubOrganization(
+    name: string,
+    parentId: string
+  ): Promise<IOrganization> {
+    const parent = await this.findOne(parentId);
+
+    const org = this.orgRepo.create({
       name,
-      parentId: currentUser.organizationId
+      parentId: parent.id,
     });
 
-    return this.orgRepository.save(org);
-  }
-
-  async getHierarchyMap(): Promise<Map<string, string | null>> {
-    const orgs = await this.orgRepository.find();
-    const map = new Map<string, string | null>();
-    
-    orgs.forEach(org => {
-      map.set(org.id, org.parentId || null);
-    });
-
-    return map;
+    return this.orgRepo.save(org);
   }
 }

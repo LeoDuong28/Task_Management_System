@@ -1,19 +1,27 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, UseGuards, Query } from '@nestjs/common';
 import { AuditService } from './audit.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard, Roles } from '../auth/roles.guard';
-import { Role } from '../shared/types';
+import { ApiResponse, IAuditLog, Permission, Role } from '@libs/data';
+import {
+  JwtAuthGuard,
+  RolesGuard,
+  PermissionsGuard,
+  Roles,
+  Permissions,
+} from '@libs/auth';
 
 @Controller('audit-log')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class AuditController {
   constructor(private auditService: AuditService) {}
 
   @Get()
   @Roles(Role.OWNER, Role.ADMIN)
-  async getAuditLogs(@Request() req) {
-    const user = req.user;
-    const isOwner = user.role === Role.OWNER;
-    return this.auditService.getLogsForOrganization(user.organizationId, isOwner);
+  @Permissions(Permission.VIEW_AUDIT)
+  async findAll(@Query('limit') limit?: string): Promise<ApiResponse<IAuditLog[]>> {
+    const logs = await this.auditService.findAll(limit ? parseInt(limit, 10) : 100);
+    return {
+      success: true,
+      data: logs,
+    };
   }
 }

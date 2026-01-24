@@ -1,26 +1,33 @@
-import { Controller, Get, Put, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard, Roles } from '../auth/roles.guard';
-import { Role } from '../shared/types';
+import { ApiResponse, IUser, JwtPayload } from '@libs/data';
+import { JwtAuthGuard } from '@libs/auth';
+
+interface AuthRequest extends Request {
+  user: JwtPayload;
+}
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  @Get()
-  async findAll(@Request() req) {
-    return this.usersService.findAll(req.user);
+  @Get('me')
+  async getProfile(@Req() req: AuthRequest): Promise<ApiResponse<Omit<IUser, 'password'>>> {
+    const user = await this.usersService.getProfile(req.user.sub);
+    return {
+      success: true,
+      data: user,
+    };
   }
 
-  @Put(':id/role')
-  @Roles(Role.OWNER)
-  async updateRole(
-    @Param('id') id: string,
-    @Body() body: { role: Role },
-    @Request() req
-  ) {
-    return this.usersService.updateRole(id, body.role, req.user);
+  @Get()
+  async findAll(@Req() req: AuthRequest): Promise<ApiResponse<Omit<IUser, 'password'>[]>> {
+    const users = await this.usersService.findAll(req.user);
+    return {
+      success: true,
+      data: users,
+    };
   }
 }

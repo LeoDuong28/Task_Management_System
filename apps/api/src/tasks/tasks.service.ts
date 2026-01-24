@@ -1,176 +1,235 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Task, User, Organization } from '../entities';
-import { CreateTaskDto, UpdateTaskDto, Role, Permission, RolePermissions } from '../shared/types';
+import { Task } from './task.entity';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  JwtPayload,
+  Role,
+  TaskStatus,
+  TaskPriority,
+  TaskCategory,
+} from '@libs/data';
 import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(Task)
-    private taskRepository: Repository<Task>,
-    @InjectRepository(Organization)
-    private orgRepository: Repository<Organization>,
+    private taskRepo: Repository<Task>,
     private auditService: AuditService
   ) {}
 
-  private hasPermission(user: User, permission: Permission): boolean {
-    const permissions = RolePermissions[user.role as Role] || [];
-    return permissions.includes(permission);
-  }
+  async create(dto: CreateTaskDto, user: JwtPayload, ip?: string): Promise<Task> {
+    const maxOrder = await this.taskRepo
+      .createQueryBuilder('task')
+      .where('task.organizationId = :orgId', { orgId: user.organizationId })
+      .andWhere('task.status = :status', { status: dto.status || TaskStatus.TODO })
+      .select('MAX(task.order)', 'max')
+      .getRawOne();
 
-  private async getAccessibleOrgIds(user: User): Promise<string[]> {
-    const orgIds = [user.organizationId];
-
-    if (user.role === Role.OWNER) {
-      const childOrgs = await this.orgRepository.find({
-        where: { parentId: user.organizationId }
-      });
-      orgIds.push(...childOrgs.map(o => o.id));
-    }
-
-    return orgIds;
-  }
-
-  async create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
-    if (!this.hasPermission(user, Permission.CREATE_TASK)) {
-      throw new ForbiddenException('You do not have permission to create tasks');
-    }
-
-    const task = this.taskRepository.create({
-      ...createTaskDto,
-      createdById: user.id,
-      organizationId: user.organizationId
+    const task = this.taskRepo.create({
+      title: dto.title,
+      description: dto.description,
+      status: dto.status || TaskStatus.TODO,
+      priority: dto.priority || TaskPriority.MEDIUM,
+      category: dto.category || TaskCategory.OTHER,
+      order: (maxOrder?.max || 0) + 1,
+      ownerId: user.sub,
+      organizationId: user.organizationId,
+      dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
     });
 
-    const savedTask = await this.taskRepository.save(task);
+    const saved = await this.taskRepo.save(task);
 
-    await this.auditService.log(
-      'CREATE',
-      'task',
-      savedTask.id,
-      user,
-      `Created task: ${savedTask.title}`
-    );
+    await this.auditService.log({
+      userId: user.sub,
+      action: 'CREATE',
+      resource: 'task',
+      resourceId: saved.id,
+      details: `Created task: ${saved.title}`,
+      ipAddress: ip,
+    });
 
-    return savedTask;
+    return saved;
   }
 
-  async findAll(user: User, filters?: { status?: string; category?: string }): Promise<Task[]> {
-    if (!this.hasPermission(user, Permission.READ_TASK)) {
-      throw new ForbiddenException('You do not have permission to view tasks');
+  async findAll(user: JwtPayload): Promise<Task[]> {
+    const orgIds = [user.organizationId];
+
+    if (user.parentOrganizationId) {
+      orgIds.push(user.parentOrganizationId);
     }
 
-    const orgIds = await this.getAccessibleOrgIds(user);
-
-    const queryBuilder = this.taskRepository.createQueryBuilder('task')
-      .leftJoinAndSelect('task.createdBy', 'createdBy')
-      .leftJoinAndSelect('task.assignedTo', 'assignedTo')
-      .where('task.organizationId IN (:...orgIds)', { orgIds });
-
-    if (filters?.status) {
-      queryBuilder.andWhere('task.status = :status', { status: filters.status });
+    if (user.role === Role.VIEWER) {
+      return this.taskRepo.find({
+        where: { organizationId: In(orgIds) },
+        order: { status: 'ASC', order: 'ASC' },
+        relations: ['owner'],
+      });
     }
 
-    if (filters?.category) {
-      queryBuilder.andWhere('task.category = :category', { category: filters.category });
-    }
-
-    queryBuilder.orderBy('task.priority', 'DESC')
-      .addOrderBy('task.createdAt', 'DESC');
-
-    await this.auditService.log(
-      'READ',
-      'tasks',
-      'list',
-      user,
-      'Listed all accessible tasks'
-    );
-
-    return queryBuilder.getMany();
+    return this.taskRepo.find({
+      where: { organizationId: In(orgIds) },
+      order: { status: 'ASC', order: 'ASC' },
+      relations: ['owner'],
+    });
   }
 
-  async findOne(id: string, user: User): Promise<Task> {
-    if (!this.hasPermission(user, Permission.READ_TASK)) {
-      throw new ForbiddenException('You do not have permission to view tasks');
-    }
-
-    const orgIds = await this.getAccessibleOrgIds(user);
-
-    const task = await this.taskRepository.findOne({
-      where: { id, organizationId: In(orgIds) },
-      relations: ['createdBy', 'assignedTo']
+  async findOne(id: string, user: JwtPayload): Promise<Task> {
+    const task = await this.taskRepo.findOne({
+      where: { id },
+      relations: ['owner', 'organization'],
     });
 
     if (!task) {
-      throw new NotFoundException('Task not found or not accessible');
+      throw new NotFoundException('Task not found');
     }
+
+    this.checkAccess(task, user);
 
     return task;
   }
 
-  async update(id: string, updateTaskDto: UpdateTaskDto, user: User): Promise<Task> {
-    if (!this.hasPermission(user, Permission.UPDATE_TASK)) {
-      throw new ForbiddenException('You do not have permission to update tasks');
-    }
-
+  async update(
+    id: string,
+    dto: UpdateTaskDto,
+    user: JwtPayload,
+    ip?: string
+  ): Promise<Task> {
     const task = await this.findOne(id, user);
 
-    Object.assign(task, updateTaskDto);
-
-    const updatedTask = await this.taskRepository.save(task);
-
-    await this.auditService.log(
-      'UPDATE',
-      'task',
-      id,
-      user,
-      `Updated task: ${JSON.stringify(updateTaskDto)}`
-    );
-
-    return updatedTask;
-  }
-
-  async remove(id: string, user: User): Promise<void> {
-    if (!this.hasPermission(user, Permission.DELETE_TASK)) {
-      throw new ForbiddenException('You do not have permission to delete tasks');
+    if (user.role === Role.VIEWER) {
+      throw new ForbiddenException('Viewers cannot update tasks');
     }
 
+    if (user.role === Role.ADMIN && task.ownerId !== user.sub) {
+      const isOrgTask = task.organizationId === user.organizationId;
+      if (!isOrgTask) {
+        throw new ForbiddenException('Cannot update tasks outside your organization');
+      }
+    }
+
+    Object.assign(task, {
+      ...dto,
+      dueDate: dto.dueDate ? new Date(dto.dueDate) : task.dueDate,
+    });
+
+    const updated = await this.taskRepo.save(task);
+
+    await this.auditService.log({
+      userId: user.sub,
+      action: 'UPDATE',
+      resource: 'task',
+      resourceId: updated.id,
+      details: `Updated task: ${updated.title}`,
+      ipAddress: ip,
+    });
+
+    return updated;
+  }
+
+  async remove(id: string, user: JwtPayload, ip?: string): Promise<void> {
     const task = await this.findOne(id, user);
 
-    await this.taskRepository.remove(task);
-
-    await this.auditService.log(
-      'DELETE',
-      'task',
-      id,
-      user,
-      `Deleted task: ${task.title}`
-    );
-  }
-
-  async reorder(taskIds: string[], user: User): Promise<Task[]> {
-    if (!this.hasPermission(user, Permission.UPDATE_TASK)) {
-      throw new ForbiddenException('You do not have permission to reorder tasks');
+    if (user.role === Role.VIEWER) {
+      throw new ForbiddenException('Viewers cannot delete tasks');
     }
 
-    const tasks = await Promise.all(
-      taskIds.map(async (id, index) => {
-        const task = await this.findOne(id, user);
-        task.priority = taskIds.length - index;
-        return this.taskRepository.save(task);
-      })
-    );
+    if (user.role === Role.ADMIN && task.ownerId !== user.sub) {
+      throw new ForbiddenException('Admins can only delete their own tasks');
+    }
 
-    await this.auditService.log(
-      'REORDER',
-      'tasks',
-      'bulk',
-      user,
-      `Reordered ${taskIds.length} tasks`
-    );
+    await this.taskRepo.remove(task);
 
-    return tasks;
+    await this.auditService.log({
+      userId: user.sub,
+      action: 'DELETE',
+      resource: 'task',
+      resourceId: id,
+      details: `Deleted task: ${task.title}`,
+      ipAddress: ip,
+    });
+  }
+
+  async reorder(
+    taskId: string,
+    newOrder: number,
+    newStatus: TaskStatus,
+    user: JwtPayload
+  ): Promise<Task[]> {
+    const task = await this.findOne(taskId, user);
+
+    if (user.role === Role.VIEWER) {
+      throw new ForbiddenException('Viewers cannot reorder tasks');
+    }
+
+    const oldStatus = task.status;
+    const oldOrder = task.order;
+
+    task.status = newStatus;
+    task.order = newOrder;
+
+    if (oldStatus !== newStatus) {
+      await this.taskRepo
+        .createQueryBuilder()
+        .update(Task)
+        .set({ order: () => '"order" - 1' })
+        .where('organizationId = :orgId', { orgId: user.organizationId })
+        .andWhere('status = :status', { status: oldStatus })
+        .andWhere('order > :oldOrder', { oldOrder })
+        .execute();
+
+      await this.taskRepo
+        .createQueryBuilder()
+        .update(Task)
+        .set({ order: () => '"order" + 1' })
+        .where('organizationId = :orgId', { orgId: user.organizationId })
+        .andWhere('status = :status', { status: newStatus })
+        .andWhere('order >= :newOrder', { newOrder })
+        .execute();
+    } else {
+      if (newOrder > oldOrder) {
+        await this.taskRepo
+          .createQueryBuilder()
+          .update(Task)
+          .set({ order: () => '"order" - 1' })
+          .where('organizationId = :orgId', { orgId: user.organizationId })
+          .andWhere('status = :status', { status: oldStatus })
+          .andWhere('order > :oldOrder', { oldOrder })
+          .andWhere('order <= :newOrder', { newOrder })
+          .execute();
+      } else {
+        await this.taskRepo
+          .createQueryBuilder()
+          .update(Task)
+          .set({ order: () => '"order" + 1' })
+          .where('organizationId = :orgId', { orgId: user.organizationId })
+          .andWhere('status = :status', { status: oldStatus })
+          .andWhere('order >= :newOrder', { newOrder })
+          .andWhere('order < :oldOrder', { oldOrder })
+          .execute();
+      }
+    }
+
+    await this.taskRepo.save(task);
+
+    return this.findAll(user);
+  }
+
+  private checkAccess(task: Task, user: JwtPayload): void {
+    const allowedOrgs = [user.organizationId];
+    if (user.parentOrganizationId) {
+      allowedOrgs.push(user.parentOrganizationId);
+    }
+
+    if (!allowedOrgs.includes(task.organizationId)) {
+      throw new ForbiddenException('Access denied to this task');
+    }
   }
 }

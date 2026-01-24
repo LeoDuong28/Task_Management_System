@@ -1,50 +1,129 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { Request } from 'express';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto, UpdateTaskDto } from '../shared/types';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  ApiResponse,
+  ITask,
+  Permission,
+  Role,
+  JwtPayload,
+  TaskStatus,
+} from '@libs/data';
+import {
+  JwtAuthGuard,
+  RolesGuard,
+  PermissionsGuard,
+  Roles,
+  Permissions,
+} from '@libs/auth';
+
+interface AuthRequest extends Request {
+  user: JwtPayload;
+}
 
 @Controller('tasks')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Post()
-  async create(@Body() createTaskDto: CreateTaskDto, @Request() req) {
-    return this.tasksService.create(createTaskDto, req.user);
+  @Roles(Role.OWNER, Role.ADMIN)
+  @Permissions(Permission.CREATE_TASK)
+  async create(
+    @Body() dto: CreateTaskDto,
+    @Req() req: AuthRequest
+  ): Promise<ApiResponse<ITask>> {
+    const task = await this.tasksService.create(dto, req.user, req.ip);
+    return {
+      success: true,
+      data: task,
+      message: 'Task created successfully',
+    };
   }
 
   @Get()
-  async findAll(
-    @Request() req,
-    @Query('status') status?: string,
-    @Query('category') category?: string
-  ) {
-    return this.tasksService.findAll(req.user, { status, category });
+  @Permissions(Permission.READ_TASK)
+  async findAll(@Req() req: AuthRequest): Promise<ApiResponse<ITask[]>> {
+    const tasks = await this.tasksService.findAll(req.user);
+    return {
+      success: true,
+      data: tasks,
+    };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req) {
-    return this.tasksService.findOne(id, req.user);
+  @Permissions(Permission.READ_TASK)
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: AuthRequest
+  ): Promise<ApiResponse<ITask>> {
+    const task = await this.tasksService.findOne(id, req.user);
+    return {
+      success: true,
+      data: task,
+    };
   }
 
   @Put(':id')
+  @Roles(Role.OWNER, Role.ADMIN)
+  @Permissions(Permission.UPDATE_TASK)
   async update(
     @Param('id') id: string,
-    @Body() updateTaskDto: UpdateTaskDto,
-    @Request() req
-  ) {
-    return this.tasksService.update(id, updateTaskDto, req.user);
+    @Body() dto: UpdateTaskDto,
+    @Req() req: AuthRequest
+  ): Promise<ApiResponse<ITask>> {
+    const task = await this.tasksService.update(id, dto, req.user, req.ip);
+    return {
+      success: true,
+      data: task,
+      message: 'Task updated successfully',
+    };
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Request() req) {
-    await this.tasksService.remove(id, req.user);
-    return { message: 'Task deleted successfully' };
+  @Roles(Role.OWNER, Role.ADMIN)
+  @Permissions(Permission.DELETE_TASK)
+  async remove(
+    @Param('id') id: string,
+    @Req() req: AuthRequest
+  ): Promise<ApiResponse<null>> {
+    await this.tasksService.remove(id, req.user, req.ip);
+    return {
+      success: true,
+      message: 'Task deleted successfully',
+    };
   }
 
-  @Post('reorder')
-  async reorder(@Body() body: { taskIds: string[] }, @Request() req) {
-    return this.tasksService.reorder(body.taskIds, req.user);
+  @Put(':id/reorder')
+  @Roles(Role.OWNER, Role.ADMIN)
+  @Permissions(Permission.UPDATE_TASK)
+  async reorder(
+    @Param('id') id: string,
+    @Body() body: { order: number; status: TaskStatus },
+    @Req() req: AuthRequest
+  ): Promise<ApiResponse<ITask[]>> {
+    const tasks = await this.tasksService.reorder(
+      id,
+      body.order,
+      body.status,
+      req.user
+    );
+    return {
+      success: true,
+      data: tasks,
+      message: 'Tasks reordered successfully',
+    };
   }
 }

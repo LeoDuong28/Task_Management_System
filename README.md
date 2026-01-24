@@ -1,317 +1,487 @@
-# Secure Task Management System
+# Leo Duong's Task Management System
 
-A full-stack task management application with Role-Based Access Control (RBAC) built using NestJS, Angular, TypeORM, and TailwindCSS in an NX monorepo structure.
+A secure task management application with role-based access control. Built with NestJS and Angular 17.
 
-![Task Management Dashboard](https://via.placeholder.com/800x400/6366f1/ffffff?text=TaskFlow+Dashboard)
-
-## 🚀 Live Demo
-
-- **Frontend**: [https://your-username.github.io/task-management](https://your-username.github.io/task-management)
-- **API Documentation**: See [API Docs](#api-documentation) section
-
-### Demo Credentials
-```
-Owner Account:
-Email: owner@demo.com
-Password: demo123
-
-Admin Account:
-Email: admin@demo.com
-Password: demo123
-
-Viewer Account:
-Email: viewer@demo.com
-Password: demo123
-```
-
-## ✨ Features
-
-### Core Features
-- ✅ JWT-based authentication (login/register)
-- ✅ Role-Based Access Control (Owner, Admin, Viewer)
-- ✅ 2-level organizational hierarchy
-- ✅ CRUD operations for tasks
-- ✅ Drag-and-drop task management
-- ✅ Real-time filtering and search
-- ✅ Audit logging
-
-### Frontend Features
-- ✅ Responsive design (mobile → desktop)
-- ✅ Dark/Light mode toggle
-- ✅ Task categorization (Work, Personal, Urgent, Other)
-- ✅ Kanban board view
-- ✅ Task statistics dashboard
-
-### Security Features
-- ✅ JWT token authentication
-- ✅ Password hashing with bcrypt
-- ✅ Permission-based guards and decorators
-- ✅ Organization-scoped data access
-- ✅ Audit trail logging
-
-## 🏗️ Architecture
-
-### Monorepo Structure (NX Workspace)
-```
-├── apps/
-│   ├── api/                    # NestJS Backend
-│   │   └── src/
-│   │       ├── auth/           # Authentication module
-│   │       ├── tasks/          # Tasks CRUD module
-│   │       ├── users/          # Users management
-│   │       ├── organizations/  # Org hierarchy
-│   │       ├── audit/          # Audit logging
-│   │       └── entities/       # TypeORM entities
-│   │
-│   └── dashboard/              # Angular Frontend
-│       └── src/
-│           └── app/
-│               ├── components/ # Reusable components
-│               ├── pages/      # Page components
-│               ├── services/   # API services
-│               ├── guards/     # Route guards
-│               └── interceptors/
-│
-└── libs/
-    ├── data/                   # Shared interfaces & DTOs
-    └── auth/                   # Shared RBAC logic
-```
-
-### Data Model (ERD)
-
-```
-┌─────────────────┐       ┌─────────────────┐
-│  Organization   │       │      User       │
-├─────────────────┤       ├─────────────────┤
-│ id (PK)         │◄──┐   │ id (PK)         │
-│ name            │   │   │ email           │
-│ parentId (FK)   │───┘   │ password        │
-│ createdAt       │       │ firstName       │
-│ updatedAt       │       │ lastName        │
-└────────┬────────┘       │ role            │
-         │                │ organizationId  │──┐
-         │                │ createdAt       │  │
-         │                │ updatedAt       │  │
-         │                └────────┬────────┘  │
-         │                         │           │
-         └─────────────────────────┼───────────┘
-                                   │
-┌─────────────────┐       ┌────────▼────────┐
-│    AuditLog     │       │      Task       │
-├─────────────────┤       ├─────────────────┤
-│ id (PK)         │       │ id (PK)         │
-│ action          │       │ title           │
-│ resource        │       │ description     │
-│ resourceId      │       │ status          │
-│ userId (FK)     │───────│ category        │
-│ organizationId  │       │ priority        │
-│ details         │       │ createdById(FK) │
-│ timestamp       │       │ organizationId  │
-└─────────────────┘       │ assignedToId    │
-                          │ createdAt       │
-                          │ updatedAt       │
-                          └─────────────────┘
-```
-
-### Access Control Implementation
-
-#### Roles & Permissions
-| Role   | Permissions                                              |
-|--------|----------------------------------------------------------|
-| Owner  | CREATE, READ, UPDATE, DELETE tasks + VIEW_AUDIT + MANAGE_USERS |
-| Admin  | CREATE, READ, UPDATE, DELETE tasks + VIEW_AUDIT          |
-| Viewer | READ tasks only                                          |
-
-#### Role Inheritance
-- **Owner**: Can access all data in their org + child organizations
-- **Admin**: Can access all data in their organization only
-- **Viewer**: Can only view tasks in their organization
-
-## 🛠️ Setup Instructions
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Git
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/your-username/task-management.git
-cd task-management
-```
+You'll need Node.js 18+ installed on your machine.
 
-### 2. Install Dependencies
+### Quick Start
+
+1. Clone the repo and install dependencies:
+
 ```bash
 npm install
 ```
 
-### 3. Environment Setup
+2. Copy the environment file:
+
 ```bash
-# Copy example env file
 cp .env.example .env
-
-# Edit .env with your settings
-# JWT_SECRET=your-secure-secret-key
 ```
 
-### 4. Run the Backend
+3. Start the backend:
+
 ```bash
-cd apps/api
-npm run start:dev
-# API runs on http://localhost:3000
+npm run api:dev
 ```
 
-### 5. Run the Frontend
+4. In a new terminal, start the frontend:
+
 ```bash
 cd apps/dashboard
-ng serve
-# Dashboard runs on http://localhost:4200
+npm install
+npm start
 ```
 
-### 6. Access the Application
-1. Open http://localhost:4200
-2. Register a new account (first user becomes Owner)
-3. Start managing tasks!
+5. Open http://localhost:4200 in your browser
 
-## 📚 API Documentation
+### Default Admin Account
 
-### Authentication Endpoints
+The system comes with a pre-configured admin account:
 
-#### POST /api/auth/register
-Register a new user.
+- **Email:** duongtrongnghia287@gmail.com
+- **Password:** Password123@
+
+## Environment Setup
+
+Create a `.env` file in the project root:
+
+```env
+NODE_ENV=development
+PORT=3000
+
+# Database (SQLite by default)
+DB_PATH=taskdb.sqlite
+
+# JWT Settings
+JWT_SECRET=change-this-to-something-secure-in-production
+JWT_EXPIRY=24h
+
+# Frontend URL for CORS
+CORS_ORIGIN=http://localhost:4200
+```
+
+For production, make sure to:
+
+- Use a strong, random JWT_SECRET
+- Consider switching to PostgreSQL for the database
+- Set NODE_ENV=production
+
+## Project Structure
+
+I went with an NX monorepo setup because it makes sharing code between the frontend and backend really easy. Here's how everything is organized:
+
+```
+├── apps/
+│   ├── api/                 # NestJS backend
+│   │   └── src/
+│   │       ├── auth/        # Login, registration, JWT
+│   │       ├── tasks/       # Task CRUD operations
+│   │       ├── users/       # User management
+│   │       ├── organizations/
+│   │       └── audit/       # Activity logging
+│   │
+│   └── dashboard/           # Angular frontend
+│       └── src/app/
+│           ├── core/        # Services and guards
+│           └── pages/       # Login, Register, Dashboard
+│
+├── libs/
+│   ├── data/               # Shared types and interfaces
+│   └── auth/               # RBAC decorators and guards
+```
+
+### Why This Structure?
+
+The `libs/` folder is the key here. Instead of duplicating types between frontend and backend, both apps import from the same place. When I add a new field to a Task, I change it once in `libs/data` and both apps get the update.
+
+The `libs/auth` folder contains all the RBAC logic - decorators like `@Roles()` and `@Permissions()`, plus the guard implementations. This keeps authorization logic in one place instead of scattered across controllers.
+
+## Data Model
+
+### Overview
+
+The app has four main entities: Organizations, Users, Tasks, and AuditLogs.
+
+```
+┌─────────────────┐
+│  Organization   │
+│  - id           │
+│  - name         │
+│  - parentId     │◄──┐ (self-reference for hierarchy)
+└────────┬────────┘   │
+         │            │
+         │ has many   │
+         ▼            │
+┌─────────────────┐   │
+│     User        │   │
+│  - id           │   │
+│  - email        │   │
+│  - name         │   │
+│  - password     │   │
+│  - role         │   │
+│  - orgId ───────┼───┘
+└────────┬────────┘
+         │
+         │ owns
+         ▼
+┌─────────────────┐       ┌─────────────────┐
+│     Task        │       │   AuditLog      │
+│  - id           │       │  - id           │
+│  - title        │       │  - userId       │
+│  - description  │       │  - action       │
+│  - status       │       │  - resource     │
+│  - priority     │       │  - details      │
+│  - category     │       │  - timestamp    │
+│  - ownerId      │       └─────────────────┘
+│  - orgId        │
+└─────────────────┘
+```
+
+### Organizations
+
+Organizations support a two-level hierarchy. A parent org can have child orgs, and users in the parent can see tasks from child orgs. This is useful for companies with departments or teams.
+
+### Users & Roles
+
+Each user has one of three roles:
+
+- **Owner** - Full access, can manage org settings
+- **Admin** - Can create/edit/delete tasks, view audit logs
+- **Viewer** - Read-only access to tasks
+
+### Tasks
+
+Tasks have status (todo, in_progress, done), priority (low, medium, high), and category (work, personal, etc.). The `order` field handles drag-and-drop sorting within each status column.
+
+### Audit Logs
+
+Every create, update, and delete operation gets logged with who did it and when. Owners and admins can view these logs to track activity.
+
+## Access Control
+
+### How It Works
+
+The RBAC system has two layers: roles and permissions.
+
+Roles are simple labels (owner, admin, viewer). Permissions are specific actions (create:task, delete:task, view:audit). Each role maps to a set of permissions:
+
+| Role   | Permissions                                                                |
+| ------ | -------------------------------------------------------------------------- |
+| Owner  | Everything                                                                 |
+| Admin  | create:task, read:task, update:task, delete:task, view:audit, manage:users |
+| Viewer | read:task only                                                             |
+
+### Backend Enforcement
+
+Controllers use decorators to specify required roles or permissions:
+
+```typescript
+@Post()
+@Roles(Role.OWNER, Role.ADMIN)
+@Permissions(Permission.CREATE_TASK)
+async create(@Body() dto: CreateTaskDto) {
+
+}
+```
+
+Three guards run on each request:
+
+1. **JwtAuthGuard** - Validates the JWT token
+2. **RolesGuard** - Checks if user's role is in the allowed list
+3. **PermissionsGuard** - Checks if user has required permissions
+
+### Organization Scoping
+
+Users can only see tasks from their own organization (and child orgs if they're in a parent org). This check happens in the service layer:
+
+```typescript
+const orgIds = [user.organizationId];
+if (user.parentOrganizationId) {
+  orgIds.push(user.parentOrganizationId);
+}
+```
+
+### JWT Structure
+
+The JWT token contains everything needed for authorization:
+
 ```json
-// Request
+{
+  "sub": "user-uuid",
+  "email": "user@example.com",
+  "role": "admin",
+  "organizationId": "org-uuid",
+  "permissions": ["create:task", "read:task", ...]
+}
+```
+
+The frontend reads this to show/hide UI elements, but actual enforcement happens server-side.
+
+---
+
+## API Reference
+
+Base URL: `http://localhost:3000/api`
+
+### Authentication
+
+#### Register
+
+```
+POST /auth/register
+```
+
+Request:
+
+```json
 {
   "email": "user@example.com",
-  "password": "password123",
-  "firstName": "John",
-  "lastName": "Doe"
+  "password": "mypassword",
+  "name": "John Doe",
+  "organizationName": "My Company"
 }
+```
 
-// Response
+Response:
+
+```json
 {
-  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "role": "owner",
-    "organizationId": "uuid"
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": "uuid",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "role": "owner"
+    }
   }
 }
 ```
 
-#### POST /api/auth/login
-Login with credentials.
+If you don't provide organizationName, you'll be added to the default org as a viewer.
+
+#### Login
+
+```
+POST /auth/login
+```
+
+Request:
+
 ```json
-// Request
 {
   "email": "user@example.com",
-  "password": "password123"
-}
-
-// Response
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "user": { ... }
+  "password": "mypassword"
 }
 ```
 
-### Task Endpoints
+### Tasks
 
-#### GET /api/tasks
-List accessible tasks (scoped by role/org).
+All task endpoints require the Authorization header:
+
 ```
-Headers: Authorization: Bearer <token>
-Query: ?status=todo&category=work
+Authorization: Bearer <your-token>
 ```
 
-#### POST /api/tasks
-Create a new task.
+#### List Tasks
+
+```
+GET /tasks
+```
+
+Returns tasks visible to the current user based on their organization.
+
+#### Create Task
+
+```
+POST /tasks
+```
+
+Request:
+
 ```json
-// Request
 {
-  "title": "Complete project",
-  "description": "Finish the task management system",
-  "status": "todo",
+  "title": "Fix login bug",
+  "description": "Users can't log in on mobile",
+  "priority": "high",
   "category": "work",
-  "priority": 2
+  "dueDate": "2024-02-15"
 }
 ```
 
-#### PUT /api/tasks/:id
-Update a task.
+Requires: Owner or Admin role
+
+#### Update Task
+
+```
+PUT /tasks/:id
+```
+
+Request:
+
 ```json
 {
-  "status": "in_progress"
+  "status": "in_progress",
+  "priority": "medium"
 }
 ```
 
-#### DELETE /api/tasks/:id
-Delete a task (if permitted).
+Requires: Owner or Admin role
 
-### Audit Endpoints
+#### Delete Task
 
-#### GET /api/audit-log
-View access logs (Owner/Admin only).
-
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd apps/api
-npm run test        # Unit tests
-npm run test:e2e    # E2E tests
+```
+DELETE /tasks/:id
 ```
 
-### Frontend Tests
+Requires: Owner or Admin role. Admins can only delete their own tasks.
+
+#### Reorder Task (Drag & Drop)
+
+```
+PUT /tasks/:id/reorder
+```
+
+Request:
+
+```json
+{
+  "order": 2,
+  "status": "done"
+}
+```
+
+### Audit Logs
+
+#### Get Logs
+
+```
+GET /audit-log?limit=50
+```
+
+Requires: Owner or Admin role
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "action": "CREATE",
+      "resource": "task",
+      "details": "Created task: Fix login bug",
+      "timestamp": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Future Improvements
+
+### Security Enhancements
+
+**Refresh Tokens**
+
+Right now, access tokens last 24 hours. For better security, I'd implement:
+
+- Short-lived access tokens (15 minutes)
+- Refresh tokens stored in HttpOnly cookies
+- Token rotation on each refresh
+
+**CSRF Protection**
+
+The current setup is vulnerable to CSRF attacks. Would add:
+
+- CSRF tokens for all state-changing requests
+- SameSite=Strict on cookies
+
+**Rate Limiting**
+
+Need to add rate limiting to prevent:
+
+- Brute force login attempts
+- API abuse
+
+### Role System Improvements
+
+**Custom Roles**
+
+Let organizations create their own roles with custom permission sets instead of the fixed three.
+
+**Resource-Level Permissions**
+
+Allow sharing individual tasks with specific users, not just org-wide access.
+
+**Time-Based Access**
+
+Support temporary access - like giving a contractor access for 2 weeks.
+
+### Performance
+
+**Permission Caching**
+
+Cache permission checks in Redis to avoid repeated database lookups. Invalidate when roles change.
+
+**Database**
+
+For production with many users:
+
+- Switch from SQLite to PostgreSQL
+- Add indexes on frequently queried columns
+- Consider read replicas for heavy read workloads
+
+---
+
+## Running Tests
+
+Backend tests:
+
+```bash
+npm run test:api
+```
+
+Frontend tests:
+
 ```bash
 cd apps/dashboard
-ng test             # Unit tests
+npm test
 ```
 
-## 🚀 Deployment
+The tests cover RBAC logic, authentication, and the main API endpoints.
 
-### Deploy Frontend to GitHub Pages
+---
 
-1. Build the Angular app:
-```bash
-cd apps/dashboard
-ng build --base-href /task-management/
+## Troubleshooting
+
+**"Cannot find module '@libs/data'"**
+
+Make sure you have a `tsconfig.json` in the project root that extends `tsconfig.base.json`:
+
+```json
+{
+  "extends": "./tsconfig.base.json"
+}
 ```
 
-2. Deploy to GitHub Pages:
-```bash
-npx angular-cli-ghpages --dir=dist/dashboard/browser
-```
+**API returns 401 on all requests**
 
-### Deploy Backend to Railway/Render
+Check that:
 
-1. Push your code to GitHub
-2. Connect repository to Railway/Render
-3. Set environment variables:
-   - `JWT_SECRET`
-   - `DATABASE_URL` (for PostgreSQL)
-4. Deploy!
+1. You're including the Authorization header
+2. The token hasn't expired
+3. JWT_SECRET in .env matches what was used to sign the token
 
-## 🔮 Future Considerations
+**Database errors on startup**
 
-- [ ] JWT refresh tokens for enhanced security
-- [ ] CSRF protection
-- [ ] RBAC caching with Redis
-- [ ] Advanced role delegation
-- [ ] WebSocket for real-time updates
-- [ ] Email notifications
-- [ ] Task comments and attachments
-- [ ] Team collaboration features
+Delete `taskdb.sqlite` and restart - the app will recreate it with the correct schema.
 
-## 📄 License
-
-MIT License - feel free to use this project for learning and development.
-
-## 👤 Author
-
-**Leo Duong**
-- GitHub: [@LeoDuong28](https://github.com/LeoDuong28)
-- LinkedIn: [leo-duong-la](https://linkedin.com/in/leo-duong-la)
+Built by Leo Duong
