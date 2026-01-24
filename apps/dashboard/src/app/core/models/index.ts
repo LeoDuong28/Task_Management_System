@@ -35,37 +35,12 @@ export const RolePermissions: Record<Role, Permission[]> = {
   [Role.VIEWER]: [Permission.READ_TASK],
 };
 
-export interface IUser {
+export interface User {
   id: string;
   email: string;
   name: string;
-  password?: string;
   role: Role;
   organizationId: string;
-  parentOrganizationId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface IOrganization {
-  id: string;
-  name: string;
-  parentId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ITask {
-  id: string;
-  title: string;
-  description?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  category: TaskCategory;
-  order: number;
-  ownerId: string;
-  organizationId: string;
-  dueDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -90,51 +65,31 @@ export enum TaskCategory {
   OTHER = 'other',
 }
 
-export interface IAuditLog {
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  category: TaskCategory;
+  order: number;
+  ownerId: string;
+  organizationId: string;
+  dueDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  owner?: User;
+}
+
+export interface AuditLog {
   id: string;
   userId: string;
   action: string;
   resource: string;
   resourceId?: string;
   details?: string;
-  ipAddress?: string;
   timestamp: Date;
-}
-
-export interface LoginDto {
-  email: string;
-  password: string;
-}
-
-export interface RegisterDto {
-  email: string;
-  password: string;
-  name: string;
-  organizationName?: string;
-}
-
-export interface CreateTaskDto {
-  title: string;
-  description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  category?: TaskCategory;
-  dueDate?: string;
-}
-
-export interface UpdateTaskDto {
-  title?: string;
-  description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  category?: TaskCategory;
-  order?: number;
-  dueDate?: string;
-}
-
-export interface AuthResponse {
-  accessToken: string;
-  user: Omit<IUser, 'password'>;
+  user?: User;
 }
 
 export interface ApiResponse<T> {
@@ -144,13 +99,7 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
-export interface JwtPayload {
-  sub: string;
-  email: string;
-  role: Role;
-  organizationId: string;
-  parentOrganizationId?: string;
-  permissions: Permission[];
-  iat?: number;
-  exp?: number;
+export interface AuthResponse {
+  accessToken: string;
+  user: User;
 }

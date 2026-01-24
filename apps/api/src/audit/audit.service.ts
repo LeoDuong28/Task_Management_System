@@ -1,65 +1,69 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuditLog, User, Organization } from '../entities';
-import * as fs from 'fs';
-import * as path from 'path';
+import { AuditLog } from './audit.entity';
+import { IAuditLog } from '@libs/data';
+
+interface CreateAuditDto {
+  userId: string;
+  action: string;
+  resource: string;
+  resourceId?: string;
+  details?: string;
+  ipAddress?: string;
+}
 
 @Injectable()
 export class AuditService {
-  private logFilePath: string;
-
   constructor(
     @InjectRepository(AuditLog)
-    private auditLogRepository: Repository<AuditLog>,
-    @InjectRepository(Organization)
-    private orgRepository: Repository<Organization>
-  ) {
-    this.logFilePath = path.join(process.cwd(), 'audit.log');
-  }
+    private auditRepo: Repository<AuditLog>
+  ) {}
 
-  async log(
-    action: string,
-    resource: string,
-    resourceId: string,
-    user: User,
-    details?: string
-  ) {
-    const auditLog = this.auditLogRepository.create({
-      action,
-      resource,
-      resourceId,
-      userId: user.id,
-      organizationId: user.organizationId,
-      details
+  async log(dto: CreateAuditDto): Promise<AuditLog> {
+    const entry = this.auditRepo.create({
+      userId: dto.userId,
+      action: dto.action,
+      resource: dto.resource,
+      resourceId: dto.resourceId,
+      details: dto.details,
+      ipAddress: dto.ipAddress,
     });
 
-    await this.auditLogRepository.save(auditLog);
+    const saved = await this.auditRepo.save(entry);
 
-    const logEntry = `[${new Date().toISOString()}] ${action} - ${resource}:${resourceId} by User:${user.id} (Org:${user.organizationId}) ${details || ''}\n`;
-    
-    console.log(logEntry);
-    
-    fs.appendFileSync(this.logFilePath, logEntry);
+    console.log(
+      `[AUDIT] ${new Date().toISOString()} | User: ${dto.userId} | Action: ${dto.action} | Resource: ${dto.resource} | ID: ${dto.resourceId || 'N/A'}`
+    );
 
-    return auditLog;
+    return saved;
   }
 
-  async getLogsForOrganization(organizationId: string, includeChildren: boolean = false) {
-    let orgIds = [organizationId];
+  async findAll(limit = 100): Promise<IAuditLog[]> {
+    return this.auditRepo.find({
+      order: { timestamp: 'DESC' },
+      take: limit,
+      relations: ['user'],
+    });
+  }
 
-    if (includeChildren) {
-      const childOrgs = await this.orgRepository.find({
-        where: { parentId: organizationId }
-      });
-      orgIds = [...orgIds, ...childOrgs.map(o => o.id)];
+  async findByUser(userId: string, limit = 50): Promise<IAuditLog[]> {
+    return this.auditRepo.find({
+      where: { userId },
+      order: { timestamp: 'DESC' },
+      take: limit,
+    });
+  }
+
+  async findByResource(resource: string, resourceId?: string): Promise<IAuditLog[]> {
+    const where: any = { resource };
+    if (resourceId) {
+      where.resourceId = resourceId;
     }
 
-    return this.auditLogRepository.find({
-      where: orgIds.map(id => ({ organizationId: id })),
-      relations: ['user'],
+    return this.auditRepo.find({
+      where,
       order: { timestamp: 'DESC' },
-      take: 100
     });
   }
 }

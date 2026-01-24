@@ -1,47 +1,36 @@
-import { Role, Permission, RolePermissions } from '../../data/src';
+import { SetMetadata } from '@nestjs/common';
+import { Permission, Role } from '@libs/data';
 
-export function hasPermission(role: Role, permission: Permission): boolean {
-  const permissions = RolePermissions[role];
-  return permissions ? permissions.includes(permission) : false;
-}
+export const ROLES_KEY = 'roles';
+export const PERMISSIONS_KEY = 'permissions';
 
-export function getRoleHierarchy(role: Role): Role[] {
-  switch (role) {
-    case Role.OWNER:
-      return [Role.OWNER, Role.ADMIN, Role.VIEWER];
-    case Role.ADMIN:
-      return [Role.ADMIN, Role.VIEWER];
-    case Role.VIEWER:
-      return [Role.VIEWER];
-    default:
-      return [];
-  }
-}
+export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
+export const Permissions = (...permissions: Permission[]) =>
+  SetMetadata(PERMISSIONS_KEY, permissions);
 
-export function canAccessRole(userRole: Role, targetRole: Role): boolean {
-  const hierarchy = getRoleHierarchy(userRole);
-  return hierarchy.includes(targetRole);
-}
-
-export function isOrganizationAccessible(
-  userOrgId: string,
-  targetOrgId: string,
-  orgHierarchy: Map<string, string | null>
+export function hasPermission(
+  userPermissions: Permission[],
+  required: Permission[]
 ): boolean {
-  if (userOrgId === targetOrgId) {
-    return true;
-  }
-  
-  let currentOrgId: string | null | undefined = targetOrgId;
-  while (currentOrgId) {
-    const parentId = orgHierarchy.get(currentOrgId);
-    if (parentId === userOrgId) {
-      return true;
-    }
-    currentOrgId = parentId;
-  }
-  
+  return required.every((p) => userPermissions.includes(p));
+}
+
+export function hasRole(userRole: Role, allowedRoles: Role[]): boolean {
+  return allowedRoles.includes(userRole);
+}
+
+export function canAccessOrganization(
+  userOrgId: string,
+  userParentOrgId: string | undefined,
+  targetOrgId: string
+): boolean {
+  if (userOrgId === targetOrgId) return true;
+  if (userParentOrgId && userParentOrgId === targetOrgId) return true;
   return false;
 }
 
-export { Role, Permission, RolePermissions } from '../../data/src';
+export function isResourceOwner(userId: string, resourceOwnerId: string): boolean {
+  return userId === resourceOwnerId;
+}
+
+export * from './guards';
