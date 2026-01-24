@@ -1,20 +1,15 @@
-# ---------- Builder ----------
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install deps first (better layer caching)
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copy source
 COPY nx.json tsconfig*.json ./
 COPY apps ./apps
 COPY libs ./libs
 
-# Build just the API (compiles shared libs via TS references/imports)
 RUN npm run api:build
 
-# ---------- Runtime ----------
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
@@ -22,11 +17,18 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# App build output
 COPY --from=builder /app/dist ./dist
 
-# Optional: keep example env around for reference
+
+
+RUN mkdir -p node_modules/@libs \
+  && ln -s /app/dist/apps/api/libs/data/src node_modules/@libs/data \
+  && ln -s /app/dist/apps/api/libs/auth/src node_modules/@libs/auth
+
 COPY .env.example ./.env.example
 
 EXPOSE 3000
-CMD ["node", "dist/apps/api/main.js"]
+CMD ["node", "dist/apps/api/apps/api/src/main.js"]
+
+
+

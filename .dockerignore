@@ -1,0 +1,8 @@
+
+!apps/dashboard/**
+!apps/dashboard/src/**
+!apps/dashboard/angular.json
+!apps/dashboard/tsconfig*.json
+!apps/dashboard/package*.json
+
+

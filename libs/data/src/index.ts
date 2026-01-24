@@ -1,17 +1,17 @@
 export enum Role {
-  OWNER = 'owner',
-  ADMIN = 'admin',
-  VIEWER = 'viewer',
+  OWNER = "owner",
+  ADMIN = "admin",
+  VIEWER = "viewer",
 }
 
 export enum Permission {
-  CREATE_TASK = 'create:task',
-  READ_TASK = 'read:task',
-  UPDATE_TASK = 'update:task',
-  DELETE_TASK = 'delete:task',
-  VIEW_AUDIT = 'view:audit',
-  MANAGE_USERS = 'manage:users',
-  MANAGE_ORG = 'manage:org',
+  CREATE_TASK = "create:task",
+  READ_TASK = "read:task",
+  UPDATE_TASK = "update:task",
+  DELETE_TASK = "delete:task",
+  VIEW_AUDIT = "view:audit",
+  MANAGE_USERS = "manage:users",
+  MANAGE_ORG = "manage:org",
 }
 
 export const RolePermissions: Record<Role, Permission[]> = {
@@ -71,23 +71,23 @@ export interface ITask {
 }
 
 export enum TaskStatus {
-  TODO = 'todo',
-  IN_PROGRESS = 'in_progress',
-  DONE = 'done',
+  TODO = "todo",
+  IN_PROGRESS = "in_progress",
+  DONE = "done",
 }
 
 export enum TaskPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
 }
 
 export enum TaskCategory {
-  WORK = 'work',
-  PERSONAL = 'personal',
-  SHOPPING = 'shopping',
-  HEALTH = 'health',
-  OTHER = 'other',
+  WORK = "work",
+  PERSONAL = "personal",
+  SHOPPING = "shopping",
+  HEALTH = "health",
+  OTHER = "other",
 }
 
 export interface IAuditLog {
@@ -111,6 +111,7 @@ export interface RegisterDto {
   password: string;
   name: string;
   organizationName?: string;
+  organizationId?: string;
 }
 
 export interface CreateTaskDto {
@@ -134,7 +135,7 @@ export interface UpdateTaskDto {
 
 export interface AuthResponse {
   accessToken: string;
-  user: Omit<IUser, 'password'>;
+  user: Omit<IUser, "password">;
 }
 
 export interface ApiResponse<T> {
