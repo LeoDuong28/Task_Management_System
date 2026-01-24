@@ -1,3 +1,14 @@
 
+.env
+.env.*
+!.env.example
+
+
+
+*.sqlite
+*.sqlite3
+*.db
 
 node_modules
+
+dist

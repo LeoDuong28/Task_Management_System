@@ -428,3 +428,10 @@ Time for 'build typescript dependencies' 0.018749999813735485
 [NX v22.4.1 Daemon Server] - 2026-01-24T10:16:05.315Z - [SYNC]: project graph hash is the same, not collecting task sync generators
 [NX v22.4.1 Daemon Server] - 2026-01-24T10:16:05.316Z - [SYNC]: nx.json hash is the same, not collecting global sync generators
 [NX v22.4.1 Daemon Server] - 2026-01-24T10:16:05.316Z - Time taken for 'total execution time for createProjectGraph()' 10.964999999850988ms
+[NX v22.4.1 Daemon Server] - 2026-01-24T10:25:57.143Z - [WATCHER]: .gitignore was modified
+[NX v22.4.1 Daemon Server] - 2026-01-24T10:25:57.150Z - [SYNC]: clearing sync generators cache due to file changes
+[NX v22.4.1 Daemon Server] - 2026-01-24T10:25:57.158Z - [WATCHER]: Processing file changes in outputs
+[NX v22.4.1 Daemon Server] - 2026-01-24T10:25:57.160Z - [WATCHER]: Stopping the watcher for /Users/nghiaduong/Documents/GitHub/Task_Management_System (sources)
+[NX v22.4.1 Daemon Server] - 2026-01-24T10:25:57.160Z - [WATCHER]: Stopping the watcher for /Users/nghiaduong/Documents/GitHub/Task_Management_System (outputs)
+[NX v22.4.1 Daemon Server] - 2026-01-24T10:25:57.173Z - [NX-CONSOLE]: Cleaning up latest Nx installation from /private/var/folders/4g/t6qqj7fd6wd9_z2hy1l6p8_h0000gn/T/tmp-19182-Jn17QlyZcYVD
+[NX v22.4.1 Daemon Server] - 2026-01-24T10:25:57.177Z - Server stopped because: "Stopping the daemon the set of ignored files changed (native)"
