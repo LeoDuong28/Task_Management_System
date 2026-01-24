@@ -1,13 +1,23 @@
-
 .env
 .env.*
 !.env.example
-
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 dist/
-
 node_modules
+
+
+*.sqlite
+*.sqlite3
+taskdb.sqlite
+
+
+.DS_Store
+.idea
+.vscode
+
+
+**/.dockerignore

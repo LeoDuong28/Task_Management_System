@@ -26,14 +26,21 @@ import { HealthController } from "./health.controller";
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: "sqlite",
-        database: config.get("DB_PATH") || "taskdb.sqlite",
-        entities: [User, Organization, Task, AuditLog],
-        synchronize: true,
-        logging: config.get("NODE_ENV") === "development",
-      }),
+      useFactory: (config: ConfigService) => {
+        const isProd = config.get("NODE_ENV") === "production";
+
+        return {
+          type: "postgres",
+          url: config.get("DATABASE_URL"),
+          entities: [User, Organization, Task, AuditLog],
+          synchronize: true,
+          logging: !isProd,
+
+          ssl: isProd ? { rejectUnauthorized: false } : false,
+        };
+      },
     }),
+
     TypeOrmModule.forFeature([User, Organization]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
