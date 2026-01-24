@@ -27,16 +27,29 @@ import { HealthController } from "./health.controller";
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const isProd = config.get("NODE_ENV") === "production";
+        const url = config.get<string>("DATABASE_URL");
+
+        if (url) {
+          const isLocal = config.get("NODE_ENV") !== "production";
+
+          return {
+            type: "postgres",
+            url,
+            entities: [User, Organization, Task, AuditLog],
+            synchronize: true,
+
+            ssl: isLocal ? undefined : { rejectUnauthorized: false },
+            extra: isLocal ? undefined : { ssl: { rejectUnauthorized: false } },
+            logging: false,
+          };
+        }
 
         return {
-          type: "postgres",
-          url: config.get("DATABASE_URL"),
+          type: "sqlite",
+          database: config.get("DB_PATH") || "taskdb.sqlite",
           entities: [User, Organization, Task, AuditLog],
           synchronize: true,
-          logging: !isProd,
-
-          ssl: isProd ? { rejectUnauthorized: false } : false,
+          logging: config.get("NODE_ENV") === "development",
         };
       },
     }),
