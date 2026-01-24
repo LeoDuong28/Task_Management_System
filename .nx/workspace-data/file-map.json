@@ -13,12 +13,8 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": ".DS_Store",
-        "hash": "7867987089666542220"
-      },
-      {
         "file": ".env.example",
-        "hash": "9804660811061216472"
+        "hash": "11686602190953437430"
       },
       {
         "file": ".github/workflows/deploy-dashboard.yml",
@@ -26,11 +22,11 @@
       },
       {
         "file": ".gitignore",
-        "hash": "1636357489554669411"
+        "hash": "16825602555218864409"
       },
       {
         "file": "Dockerfile.api",
-        "hash": "403535170506395049"
+        "hash": "9632348794034785957"
       },
       {
         "file": "Dockerfile.dashboard",
@@ -46,7 +42,7 @@
       },
       {
         "file": "apps/api/src/app.module.ts",
-        "hash": "10243314998878440837"
+        "hash": "11836892327975458662"
       },
       {
         "file": "apps/api/src/audit/audit.controller.ts",
@@ -54,7 +50,7 @@
       },
       {
         "file": "apps/api/src/audit/audit.entity.ts",
-        "hash": "3524611175005294945"
+        "hash": "3289735791288489591"
       },
       {
         "file": "apps/api/src/audit/audit.module.ts",
@@ -81,12 +77,16 @@
         "hash": "9234078306765168970"
       },
       {
+        "file": "apps/api/src/health.controller.ts",
+        "hash": "5557615600793341756"
+      },
+      {
         "file": "apps/api/src/main.ts",
-        "hash": "4467019603429567172"
+        "hash": "6032464996833976854"
       },
       {
         "file": "apps/api/src/organizations/organization.entity.ts",
-        "hash": "13869948163879987157"
+        "hash": "15112113627124068817"
       },
       {
         "file": "apps/api/src/organizations/organizations.controller.ts",
@@ -106,7 +106,7 @@
       },
       {
         "file": "apps/api/src/tasks/task.entity.ts",
-        "hash": "7153786727270304634"
+        "hash": "8995794538753260501"
       },
       {
         "file": "apps/api/src/tasks/tasks.controller.spec.ts",
@@ -126,7 +126,7 @@
       },
       {
         "file": "apps/api/src/users/user.entity.ts",
-        "hash": "12801496188668355570"
+        "hash": "8524799647899667002"
       },
       {
         "file": "apps/api/src/users/users.controller.ts",
@@ -145,8 +145,8 @@
         "hash": "8528249503884103831"
       },
       {
-        "file": "apps/dashboard/.DS_Store",
-        "hash": "2018237219277345599"
+        "file": "apps/dashboard/.angular/cache/17.3.17/dashboard/.tsbuildinfo",
+        "hash": "17071746785521793892"
       },
       {
         "file": "apps/dashboard/angular.json",
@@ -286,11 +286,11 @@
       },
       {
         "file": "package-lock.json",
-        "hash": "4204493207962123709"
+        "hash": "12345488702824973371"
       },
       {
         "file": "package.json",
-        "hash": "7828660589485421389"
+        "hash": "10654245802464372277"
       },
       {
         "file": "tsconfig.base.json",
@@ -298,10 +298,10 @@
       },
       {
         "file": "tsconfig.json",
-        "hash": "10152458489182962971"
+        "hash": "14495951761169226392"
       }
     ],
     "projectFileMap": {}
   },
-  "externalNodesHash": "13638312676463071255"
+  "externalNodesHash": "15819652159552973498"
 }

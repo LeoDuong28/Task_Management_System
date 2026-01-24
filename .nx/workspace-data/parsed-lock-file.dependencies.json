@@ -5005,8 +5005,78 @@
     "type": "static"
   },
   {
+    "source": "npm:pg",
+    "target": "npm:pg-connection-string",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg",
+    "target": "npm:pg-pool",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg",
+    "target": "npm:pg-protocol",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg",
+    "target": "npm:pg-types",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg",
+    "target": "npm:pgpass",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg",
+    "target": "npm:pg-cloudflare",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg-pool",
+    "target": "npm:pg",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg-types",
+    "target": "npm:pg-int8",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg-types",
+    "target": "npm:postgres-array",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg-types",
+    "target": "npm:postgres-bytea",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg-types",
+    "target": "npm:postgres-date",
+    "type": "static"
+  },
+  {
+    "source": "npm:pg-types",
+    "target": "npm:postgres-interval",
+    "type": "static"
+  },
+  {
+    "source": "npm:pgpass",
+    "target": "npm:split2",
+    "type": "static"
+  },
+  {
     "source": "npm:pkg-dir",
     "target": "npm:find-up",
+    "type": "static"
+  },
+  {
+    "source": "npm:postgres-interval",
+    "target": "npm:xtend",
     "type": "static"
   },
   {
@@ -6007,6 +6077,11 @@
   {
     "source": "npm:typed-array-buffer",
     "target": "npm:is-typed-array",
+    "type": "static"
+  },
+  {
+    "source": "npm:typeorm",
+    "target": "npm:pg",
     "type": "static"
   },
   {
