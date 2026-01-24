@@ -4,11 +4,10 @@
 !.env.example
 
 
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-*.sqlite
-*.sqlite3
-*.db
+dist/
 
 node_modules
-
-dist
