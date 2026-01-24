@@ -6,7 +6,8 @@
     "api:build": "npx nx build api",
     "api:start": "node dist/apps/api/main.js",
     "dashboard:build": "npx nx build dashboard",
-    "build": "npm run dashboard:build && npm run api:build"
+    "build": "npx nx build api",
+    "start": "node dist/apps/api/main.js"
   },
   "dependencies": {
     "@angular/animations": "^17.3.0",
