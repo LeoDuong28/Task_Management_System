@@ -3,12 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start:api": "cd apps/api && nest start --watch",
-    "start:dashboard": "cd apps/dashboard && ng serve",
-    "build:api": "cd apps/api && nest build",
-    "build:dashboard": "cd apps/dashboard && ng build",
-    "test:api": "cd apps/api && jest",
-    "test:dashboard": "cd apps/dashboard && ng test"
+    "api:build": "npx nx build api",
+    "api:start": "node dist/apps/api/main.js",
+    "dashboard:build": "npx nx build dashboard",
+    "build": "npm run dashboard:build && npm run api:build"
   },
   "dependencies": {
     "@angular/animations": "^17.3.0",
