@@ -22,15 +22,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: npm
+        node-version: 18
 
       - name: Install root deps
-        run: npm ci
+        run: npm install
 
       - name: Install dashboard deps
         working-directory: apps/dashboard
-        run: npm ci
+        run: npm install
 
       - name: Build dashboard
         working-directory: apps/dashboard
