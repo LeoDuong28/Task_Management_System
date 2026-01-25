@@ -1,13 +1,13 @@
 import { Component, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
-import { HttpClient, HttpClientModule } from "@angular/common/http";
+import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
   selector: "app-login",
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div style="max-width:420px;margin:48px auto;font-family:system-ui;">
       <h1 style="margin:0 0 12px;">Sign in</h1>
@@ -33,11 +33,7 @@ import { environment } from "../../../environments/environment";
         </button>
 
         <p *ngIf="error" style="color:#b00020;margin-top:12px;">{{ error }}</p>
-        <p
-          *ngIf="token"
-          style="color:#0a7a0a;margin-top:12px;word-break:break-all;">
-          Logged in ✅ token saved to localStorage.
-        </p>
+        <p *ngIf="ok" style="color:#0a7a0a;margin-top:12px;">Logged in ✅</p>
       </form>
     </div>
   `,
@@ -48,7 +44,7 @@ export class LoginComponent {
 
   loading = false;
   error = "";
-  token = "";
+  ok = false;
 
   form = this.fb.group({
     email: [
@@ -60,21 +56,23 @@ export class LoginComponent {
 
   submit() {
     this.error = "";
+    this.ok = false;
     this.loading = true;
 
-    const body = this.form.getRawValue();
-
     this.http
-      .post<any>(`${environment.apiUrl}/api/auth/login`, body)
+      .post<any>(
+        `${environment.apiUrl}/api/auth/login`,
+        this.form.getRawValue()
+      )
       .subscribe({
         next: (res) => {
-          const accessToken = res?.data?.accessToken;
-          if (!accessToken) {
-            this.error = "Login succeeded but token missing.";
+          const token = res?.data?.accessToken;
+          if (!token) {
+            this.error = "Token missing from response.";
             return;
           }
-          localStorage.setItem("token", accessToken);
-          this.token = accessToken;
+          localStorage.setItem("token", token);
+          this.ok = true;
         },
         error: (err) => {
           this.error = err?.error?.message || "Login failed";
