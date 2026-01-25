@@ -7,37 +7,37 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
-} from "typeorm";
-import { User } from "../users/user.entity";
-import { Task } from "../tasks/task.entity";
+} from 'typeorm';
+import { User } from '../users/user.entity';
+import { Task } from '../tasks/task.entity';
 
-@Entity("organizations")
+@Entity('organizations')
 export class Organization {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  name!: string;
+  name: string;
 
   @Column({ nullable: true })
-  parentId!: string | null;
+  parentId: string;
 
   @ManyToOne(() => Organization, (org) => org.children, { nullable: true })
-  @JoinColumn({ name: "parentId" })
-  parent!: Organization | null;
+  @JoinColumn({ name: 'parentId' })
+  parent: Organization;
 
   @OneToMany(() => Organization, (org) => org.parent)
-  children!: Organization[];
+  children: Organization[];
 
   @OneToMany(() => User, (user) => user.organization)
-  users!: User[];
+  users: User[];
 
   @OneToMany(() => Task, (task) => task.organization)
-  tasks!: Task[];
+  tasks: Task[];
 
   @CreateDateColumn()
-  createdAt!: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt!: Date;
+  updatedAt: Date;
 }

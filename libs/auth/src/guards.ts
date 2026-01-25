@@ -4,11 +4,11 @@ import {
   ExecutionContext,
   ForbiddenException,
   UnauthorizedException,
-} from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { JwtService } from "@nestjs/jwt";
-import { Role, Permission, RolePermissions, JwtPayload } from "@libs/data";
-import { ROLES_KEY, PERMISSIONS_KEY } from "./index";
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
+import { Role, Permission, RolePermissions, JwtPayload } from '@libs/data';
+import { ROLES_KEY, PERMISSIONS_KEY } from './index';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -19,7 +19,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException("Missing authentication token");
+      throw new UnauthorizedException('Missing authentication token');
     }
 
     try {
@@ -27,13 +27,13 @@ export class JwtAuthGuard implements CanActivate {
       request.user = payload;
       return true;
     } catch {
-      throw new UnauthorizedException("Invalid or expired token");
+      throw new UnauthorizedException('Invalid or expired token');
     }
   }
 
   private extractTokenFromHeader(request: any): string | undefined {
-    const [type, token] = request.headers.authorization?.split(" ") ?? [];
-    return type === "Bearer" ? token : undefined;
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 }
 
@@ -55,13 +55,13 @@ export class RolesGuard implements CanActivate {
     const user = request.user as JwtPayload;
 
     if (!user) {
-      throw new UnauthorizedException("User not authenticated");
+      throw new UnauthorizedException('User not authenticated');
     }
 
     const hasRole = requiredRoles.includes(user.role);
 
     if (!hasRole) {
-      throw new ForbiddenException("Insufficient role privileges");
+      throw new ForbiddenException('Insufficient role privileges');
     }
 
     return true;
@@ -86,7 +86,7 @@ export class PermissionsGuard implements CanActivate {
     const user = request.user as JwtPayload;
 
     if (!user) {
-      throw new UnauthorizedException("User not authenticated");
+      throw new UnauthorizedException('User not authenticated');
     }
 
     const userPermissions = RolePermissions[user.role] || [];
@@ -95,9 +95,11 @@ export class PermissionsGuard implements CanActivate {
     );
 
     if (!hasAllPermissions) {
-      throw new ForbiddenException("Insufficient permissions");
+      throw new ForbiddenException('Insufficient permissions');
     }
 
     return true;
   }
 }
+
+export { JwtAuthGuard, RolesGuard, PermissionsGuard };

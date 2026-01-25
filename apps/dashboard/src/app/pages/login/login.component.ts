@@ -1,85 +1,136 @@
-import { Component, inject } from "@angular/core";
+import { Component, inject, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
-import { HttpClient } from "@angular/common/http";
-import { environment } from "../../../environments/environment";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
+import { AuthService } from "../../core/services/auth.service";
 
 @Component({
-  standalone: true,
   selector: "app-login",
-  imports: [CommonModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div style="max-width:420px;margin:48px auto;font-family:system-ui;">
-      <h1 style="margin:0 0 12px;">Sign in</h1>
+    <div
+      class="min-h-screen flex items-center justify-center bg-gradient-to-br from-surface-50 via-primary-50/30 to-surface-100 dark:from-surface-900 dark:via-surface-800 dark:to-surface-900 p-4">
+      <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+          <img
+            src="assets/logo.png"
+            alt="Leo Duong"
+            class="h-24 mx-auto mb-4" />
+          <h1
+            class="text-2xl font-display font-bold text-surface-900 dark:text-white">
+            Leo Duong's Task Management
+          </h1>
+          <p class="text-surface-500 dark:text-surface-400 mt-2">
+            Sign in to your account
+          </p>
+        </div>
 
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        <label style="display:block;margin:12px 0 6px;">Email</label>
-        <input
-          formControlName="email"
-          type="email"
-          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;" />
+        <div class="card">
+          @if (error()) {
+          <div
+            class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+            <p class="text-sm text-red-600 dark:text-red-400">{{ error() }}</p>
+          </div>
+          }
 
-        <label style="display:block;margin:12px 0 6px;">Password</label>
-        <input
-          formControlName="password"
-          type="password"
-          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;" />
+          <form (ngSubmit)="onSubmit()" class="space-y-5">
+            <div>
+              <label
+                class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2"
+                >Email</label
+              >
+              <input
+                type="email"
+                [(ngModel)]="email"
+                name="email"
+                class="input"
+                placeholder="YourEmail@email.com"
+                required />
+            </div>
 
-        <button
-          type="submit"
-          [disabled]="form.invalid || loading"
-          style="margin-top:16px;width:100%;padding:10px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;">
-          {{ loading ? "Signing in..." : "Sign in" }}
-        </button>
+            <div>
+              <label
+                class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2"
+                >Password</label
+              >
+              <input
+                type="password"
+                [(ngModel)]="password"
+                name="password"
+                class="input"
+                placeholder="••••••••"
+                required />
+            </div>
 
-        <p *ngIf="error" style="color:#b00020;margin-top:12px;">{{ error }}</p>
-        <p *ngIf="ok" style="color:#0a7a0a;margin-top:12px;">Logged in ✅</p>
-      </form>
+            <button
+              type="submit"
+              [disabled]="loading()"
+              class="btn btn-primary w-full">
+              @if (loading()) {
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Signing in... } @else { Sign in }
+            </button>
+          </form>
+
+          <div class="mt-6 text-center">
+            <p class="text-sm text-surface-500 dark:text-surface-400">
+              Don't have an account?
+              <a
+                routerLink="/register"
+                class="text-primary-600 hover:text-primary-500 font-medium ml-1">
+                Create one
+              </a>
+            </p>
+          </div>
+        </div>
+
+        <p
+          class="text-center text-xs text-surface-400 dark:text-surface-500 mt-8">
+          Secure Task Management with Role-Based Access Control
+        </p>
+      </div>
     </div>
   `,
 })
 export class LoginComponent {
-  private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  loading = false;
-  error = "";
-  ok = false;
+  email = "";
+  password = "";
+  loading = signal(false);
+  error = signal<string | null>(null);
 
-  form = this.fb.group({
-    email: [
-      "duongtrongnghia287@gmail.com",
-      [Validators.required, Validators.email],
-    ],
-    password: ["Password123@", [Validators.required]],
-  });
+  onSubmit() {
+    if (!this.email || !this.password) {
+      this.error.set("Please fill in all fields");
+      return;
+    }
 
-  submit() {
-    this.error = "";
-    this.ok = false;
-    this.loading = true;
+    this.loading.set(true);
+    this.error.set(null);
 
-    this.http
-      .post<any>(
-        `${environment.apiUrl}/api/auth/login`,
-        this.form.getRawValue()
-      )
-      .subscribe({
-        next: (res) => {
-          const token = res?.data?.accessToken;
-          if (!token) {
-            this.error = "Token missing from response.";
-            return;
-          }
-          localStorage.setItem("token", token);
-          this.ok = true;
-        },
-        error: (err) => {
-          this.error = err?.error?.message || "Login failed";
-        },
-        complete: () => {
-          this.loading = false;
-        },
-      });
+    this.authService.login(this.email, this.password).subscribe({
+      next: () => {
+        this.router.navigate(["/dashboard"]);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err.error?.message || "Invalid credentials");
+      },
+    });
   }
 }
