@@ -485,3 +485,105 @@ Check that:
 Delete `taskdb.sqlite` and restart - the app will recreate it with the correct schema.
 
 Built by Leo Duong
+
+## Docker (runs on any device)
+
+From the repo root:
+
+```bash
+docker compose up --build
+```
+
+- Dashboard: http://localhost:8080
+- API: http://localhost:3000/api
+
+Default seeded admin (from the API startup seed):
+- Email: duongtrongnghia287@gmail.com
+- Password: Password123@
+
+## Live demo (GitHub Pages)
+
+This repo includes a GitHub Actions workflow that deploys the **Angular dashboard** to GitHub Pages on every push to `main`.
+
+1) Push to GitHub.
+2) In your repo: **Settings → Pages** → set Source to **GitHub Actions**.
+3) (Recommended) Set a repo variable **API_URL** to your deployed backend, e.g. `https://your-api.onrender.com/api`.
+4) Your demo URL will be:
+
+`https://<your-username>.github.io/<your-repo>/`
+
+> Note: GitHub Pages hosts static sites only. For a full live demo, deploy the NestJS API to a host like Render/Fly/Railway and point `API_URL` to it.
+
+## 🐳 Docker Quickstart (Runs Anywhere)
+
+### Local (API + Dashboard)
+
+```bash
+# from repo root
+docker compose up --build
+```
+
+- Dashboard: http://localhost:8080
+- API: http://localhost:3000/api
+
+The API uses a SQLite database stored in a Docker volume (`api-data`).
+
+### Stop
+
+```bash
+docker compose down
+```
+
+## 🌐 Live Demo on GitHub Pages (Dashboard)
+
+This repo includes a GitHub Actions workflow that deploys the **Angular dashboard** to GitHub Pages.
+
+1) Push to the `main` branch.
+2) In GitHub: **Settings → Pages** → set **Build and deployment** to **GitHub Actions**.
+3) (Optional) Set a repo variable for the backend URL:
+   - **Settings → Secrets and variables → Actions → Variables**
+   - Add `API_URL` = `https://YOUR_BACKEND_URL/api`
+
+Your demo link will be:
+
+```
+https://<your-username>.github.io/<your-repo-name>/
+```
+
+> Note: GitHub Pages is static hosting. To make the demo fully functional, deploy the NestJS API to a host (Render/Fly.io/Railway/etc.) and set `API_URL` accordingly.
+
+## Docker (runs on any device)
+
+This repo includes a ready-to-go Docker setup for the API + Dashboard.
+
+### Prerequisites
+- Docker Desktop (or Docker Engine + Compose)
+
+### Run
+
+```bash
+docker compose up --build
+```
+
+Then open:
+- Dashboard: http://localhost:8080
+- API: http://localhost:3000/api
+
+A default admin account is auto-seeded on first run:
+- Email: duongtrongnghia287@gmail.com
+- Password: Password123@
+
+The SQLite database is persisted in a named Docker volume (`api_data`).
+
+## Live Demo (GitHub Pages)
+
+GitHub Pages can host the **Dashboard**. The API must be hosted elsewhere (Render/Fly.io/Railway/etc.), then point the dashboard to that API URL.
+
+1) Deploy your API (recommended: use the `Dockerfile.api`).
+2) In your GitHub repo, go to **Settings → Variables and secrets → Actions → Variables** and add:
+   - `API_URL` = `https://YOUR_BACKEND_DOMAIN/api`
+3) In your GitHub repo, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+4) Push to `main`.
+
+Your demo will be available at:
+`https://<your-github-username>.github.io/<your-repo-name>/`

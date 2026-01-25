@@ -1,16 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Organization } from "./organization.entity";
-import { IOrganization, JwtPayload } from "@libs/data";
-
-const toIOrganization = (org: Organization): IOrganization => ({
-  id: org.id,
-  name: org.name,
-  parentId: org.parentId ?? undefined,
-  createdAt: org.createdAt,
-  updatedAt: org.updatedAt,
-});
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Organization } from './organization.entity';
+import { IOrganization, JwtPayload } from '@libs/data';
 
 @Injectable()
 export class OrganizationsService {
@@ -22,14 +14,14 @@ export class OrganizationsService {
   async findOne(id: string): Promise<IOrganization> {
     const org = await this.orgRepo.findOne({
       where: { id },
-      relations: ["children"],
+      relations: ['children'],
     });
 
     if (!org) {
-      throw new NotFoundException("Organization not found");
+      throw new NotFoundException('Organization not found');
     }
 
-    return toIOrganization(org);
+    return org;
   }
 
   async findUserOrganization(user: JwtPayload): Promise<IOrganization> {
@@ -47,7 +39,6 @@ export class OrganizationsService {
       parentId: parent.id,
     });
 
-    const saved = await this.orgRepo.save(org);
-    return toIOrganization(saved);
+    return this.orgRepo.save(org);
   }
 }

@@ -638,3 +638,27 @@ Time for 'build typescript dependencies' 0.037791000213474035
 [NX v22.4.1 Daemon Server] - 2026-01-24T23:46:24.072Z - [SYNC]: project graph hash is the same, not collecting task sync generators
 [NX v22.4.1 Daemon Server] - 2026-01-24T23:46:24.072Z - [SYNC]: nx.json hash is the same, not collecting global sync generators
 [NX v22.4.1 Daemon Server] - 2026-01-24T23:46:24.072Z - Time taken for 'total execution time for createProjectGraph()' 25.240708000026643ms
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.484Z - [WATCHER]: nginx.conf was created or restored
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.492Z - [SYNC]: clearing sync generators cache due to file changes
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.494Z - [WATCHER]: Processing file changes in outputs
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.598Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.598Z - [REQUEST]: nginx.conf
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.598Z - [REQUEST]: 
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.609Z - Time taken for 'hash changed files from watcher' 3.724374999292195ms
+Time for 'nx/core/project-json:createNodes' 1.2177909994497895
+Time for 'nx/core/package-json:createNodes' 8.024834000505507
+Time for 'nx/js/dependencies-and-lockfile:createNodes' 15.056165999732912
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.640Z - Time taken for 'build-project-configs' 31.979666999541223ms
+Time for 'build typescript dependencies' 0.07358300033956766
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.650Z - [SYNC]: collect registered sync generators
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.651Z - [SYNC]: project graph hash is the same, not collecting task sync generators
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.651Z - [SYNC]: nx.json hash is the same, not collecting global sync generators
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:04.651Z - Time taken for 'total execution time for createProjectGraph()' 13.935666999779642ms
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.051Z - [Server] Daemon outdated: NX_VERSION_CHANGED
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.051Z - [Server] Shutting down daemon (no restart)...
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.069Z - [Server] Daemon outdated: NX_VERSION_CHANGED
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.069Z - [Server] Shutting down daemon (no restart)...
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.071Z - [WATCHER]: Stopping the watcher for /Users/nghiaduong/Documents/GitHub/Task_Management_System (sources)
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.071Z - [WATCHER]: Stopping the watcher for /Users/nghiaduong/Documents/GitHub/Task_Management_System (outputs)
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.074Z - [NX-CONSOLE]: Cleaning up latest Nx installation from /private/var/folders/4g/t6qqj7fd6wd9_z2hy1l6p8_h0000gn/T/tmp-2542-y7ohWAJcGuHG
+[NX v22.4.1 Daemon Server] - 2026-01-25T01:08:27.076Z - Server stopped because: "NX_VERSION_CHANGED"
