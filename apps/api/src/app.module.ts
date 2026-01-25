@@ -15,6 +15,7 @@ import { Organization } from "./organizations/organization.entity";
 import { Task } from "./tasks/task.entity";
 import { AuditLog } from "./audit/audit.entity";
 import { Role } from "@libs/data";
+import { HealthController } from "./health.controller";
 
 @Module({
   imports: [
@@ -51,6 +52,8 @@ import { Role } from "@libs/data";
     OrganizationsModule,
     AuditModule,
   ],
+  controllers: [HealthController],
+  imports: [ ... ],
 })
 export class AppModule implements OnModuleInit {
   constructor(
