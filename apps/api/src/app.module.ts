@@ -5,16 +5,19 @@ import { JwtModule } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import * as bcrypt from "bcryptjs";
+
 import { AuthModule } from "./auth/auth.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { UsersModule } from "./users/users.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { AuditModule } from "./audit/audit.module";
+
 import { User } from "./users/user.entity";
 import { Organization } from "./organizations/organization.entity";
 import { Task } from "./tasks/task.entity";
 import { AuditLog } from "./audit/audit.entity";
 import { Role } from "@libs/data";
+
 import { HealthController } from "./health.controller";
 
 @Module({
@@ -53,7 +56,6 @@ import { HealthController } from "./health.controller";
     AuditModule,
   ],
   controllers: [HealthController],
-  imports: [ ... ],
 })
 export class AppModule implements OnModuleInit {
   constructor(
