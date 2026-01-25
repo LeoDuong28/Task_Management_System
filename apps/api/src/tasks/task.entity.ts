@@ -6,54 +6,54 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-} from 'typeorm';
-import { TaskStatus, TaskPriority, TaskCategory } from '@libs/data';
-import { User } from '../users/user.entity';
-import { Organization } from '../organizations/organization.entity';
+} from "typeorm";
+import { TaskStatus, TaskPriority, TaskCategory } from "@libs/data";
+import { User } from "../users/user.entity";
+import { Organization } from "../organizations/organization.entity";
 
-@Entity('tasks')
+@Entity("tasks")
 export class Task {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column({ nullable: true })
-  description: string;
+  description!: string;
 
-  @Column({ type: 'varchar', default: TaskStatus.TODO })
-  status: TaskStatus;
+  @Column({ type: "varchar", default: TaskStatus.TODO })
+  status!: TaskStatus;
 
-  @Column({ type: 'varchar', default: TaskPriority.MEDIUM })
-  priority: TaskPriority;
+  @Column({ type: "varchar", default: TaskPriority.MEDIUM })
+  priority!: TaskPriority;
 
-  @Column({ type: 'varchar', default: TaskCategory.OTHER })
-  category: TaskCategory;
+  @Column({ type: "varchar", default: TaskCategory.OTHER })
+  category!: TaskCategory;
 
-  @Column({ type: 'int', default: 0 })
-  order: number;
+  @Column({ type: "int", default: 0 })
+  order!: number;
 
   @Column()
-  ownerId: string;
+  ownerId!: string;
 
   @ManyToOne(() => User, (user) => user.tasks)
-  @JoinColumn({ name: 'ownerId' })
-  owner: User;
+  @JoinColumn({ name: "ownerId" })
+  owner!: User;
 
   @Column()
-  organizationId: string;
+  organizationId!: string;
 
   @ManyToOne(() => Organization, (org) => org.tasks)
-  @JoinColumn({ name: 'organizationId' })
-  organization: Organization;
+  @JoinColumn({ name: "organizationId" })
+  organization!: Organization;
 
   @Column({ nullable: true })
-  dueDate: Date;
+  dueDate!: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

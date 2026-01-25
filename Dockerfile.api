@@ -1,9 +1,6 @@
-# ---- API (NestJS) ----
-# Build stage
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Install deps (dev deps needed to compile TypeScript)
 COPY package.json package-lock.json ./
 COPY tsconfig.json tsconfig.base.json nx.json ./
 COPY apps ./apps
@@ -12,22 +9,20 @@ COPY libs ./libs
 RUN npm ci
 RUN npm run api:build
 
-# Runtime stage
 FROM node:20-alpine AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Install production dependencies only
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Copy built output
 COPY --from=build /app/dist ./dist
 
-# SQLite will live here (mounted as a volume in docker-compose)
 RUN mkdir -p /data
 
 EXPOSE 3000
-CMD ["node", "dist/apps/api/main.js"]
+
+CMD ["sh", "-lc", "node -r module-alias/register $(find dist -type f -path '*apps/api*main.js' | head -n 1)"]
+

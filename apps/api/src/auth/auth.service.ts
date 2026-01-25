@@ -2,13 +2,14 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
-import { User } from '../users/user.entity';
-import { Organization } from '../organizations/organization.entity';
+  NotFoundException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, IsNull } from "typeorm";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcryptjs";
+import { User } from "../users/user.entity";
+import { Organization } from "../organizations/organization.entity";
 import {
   LoginDto,
   RegisterDto,
@@ -16,7 +17,7 @@ import {
   RolePermissions,
   JwtPayload,
   AuthResponse,
-} from '@libs/data';
+} from "@libs/data";
 
 @Injectable()
 export class AuthService {
@@ -29,21 +30,26 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    const existing = await this.userRepo.findOne({
+      where: { email: dto.email },
+    });
     if (existing) {
-      throw new ConflictException('Email already registered');
+      throw new ConflictException("Email already registered");
     }
 
-    let organization: Organization;
+    let organization: Organization | null = null;
 
-    if (dto.organizationName) {
-      organization = this.orgRepo.create({ name: dto.organizationName });
-      await this.orgRepo.save(organization);
+    if (dto.organizationName?.trim()) {
+      organization = this.orgRepo.create({ name: dto.organizationName.trim() });
+      organization = await this.orgRepo.save(organization);
     } else {
-      organization = await this.orgRepo.findOne({ where: { parentId: undefined as any } });
+      organization = await this.orgRepo.findOne({
+        where: { parentId: IsNull() },
+      });
+
       if (!organization) {
-        organization = this.orgRepo.create({ name: 'Default Organization' });
-        await this.orgRepo.save(organization);
+        organization = this.orgRepo.create({ name: "Default Organization" });
+        organization = await this.orgRepo.save(organization);
       }
     }
 
@@ -53,7 +59,7 @@ export class AuthService {
       email: dto.email,
       name: dto.name,
       password: hashedPassword,
-      role: dto.organizationName ? Role.OWNER : Role.VIEWER,
+      role: dto.organizationName?.trim() ? Role.OWNER : Role.VIEWER,
       organizationId: organization.id,
     });
 
@@ -76,18 +82,24 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
-    const user = await this.userRepo.findOne({
-      where: { email: dto.email },
-      relations: ['organization'],
-    });
+    const user = await this.userRepo
+      .createQueryBuilder("user")
+      .addSelect("user.password")
+      .leftJoinAndSelect("user.organization", "organization")
+      .where("user.email = :email", { email: dto.email })
+      .getOne();
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.password);
     if (!passwordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
+    }
+
+    if (!user.organization) {
+      throw new NotFoundException("Organization not found for user");
     }
 
     const token = await this.generateToken(user, user.organization);
@@ -109,17 +121,20 @@ export class AuthService {
   async validateUser(userId: string): Promise<User | null> {
     return this.userRepo.findOne({
       where: { id: userId },
-      relations: ['organization'],
+      relations: ["organization"],
     });
   }
 
-  private async generateToken(user: User, organization: Organization): Promise<string> {
+  private async generateToken(
+    user: User,
+    organization: Organization
+  ): Promise<string> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
       organizationId: user.organizationId,
-      parentOrganizationId: organization.parentId,
+      parentOrganizationId: organization.parentId ?? undefined,
       permissions: RolePermissions[user.role],
     };
 
