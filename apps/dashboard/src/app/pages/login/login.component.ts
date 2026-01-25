@@ -1,105 +1,83 @@
 import { Component, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { HttpClient, HttpClientModule } from "@angular/common/http";
 import { environment } from "../../../environments/environment";
-
-type LoginResponse = {
-  success?: boolean;
-  data?: {
-    accessToken?: string;
-    user?: { email?: string; name?: string; role?: string };
-  };
-  message?: string;
-};
 
 @Component({
   standalone: true,
   selector: "app-login",
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
   template: `
-    <div style="max-width: 420px; margin: 48px auto; font-family: system-ui;">
-      <h1 style="margin: 0 0 16px;">Login</h1>
+    <div style="max-width:420px;margin:48px auto;font-family:system-ui;">
+      <h1 style="margin:0 0 12px;">Sign in</h1>
 
-      <form (ngSubmit)="onLogin()" style="display: grid; gap: 12px;">
-        <label>
-          <div style="font-size: 14px; margin-bottom: 6px;">Email</div>
-          <input
-            [(ngModel)]="email"
-            name="email"
-            type="email"
-            required
-            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" />
-        </label>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <label style="display:block;margin:12px 0 6px;">Email</label>
+        <input
+          formControlName="email"
+          type="email"
+          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;" />
 
-        <label>
-          <div style="font-size: 14px; margin-bottom: 6px;">Password</div>
-          <input
-            [(ngModel)]="password"
-            name="password"
-            type="password"
-            required
-            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" />
-        </label>
+        <label style="display:block;margin:12px 0 6px;">Password</label>
+        <input
+          formControlName="password"
+          type="password"
+          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;" />
 
         <button
           type="submit"
-          [disabled]="loading"
-          style="padding: 10px; border-radius: 8px; border: 0; cursor: pointer;">
-          {{ loading ? "Logging in..." : "Login" }}
+          [disabled]="form.invalid || loading"
+          style="margin-top:16px;width:100%;padding:10px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;">
+          {{ loading ? "Signing in..." : "Sign in" }}
         </button>
+
+        <p *ngIf="error" style="color:#b00020;margin-top:12px;">{{ error }}</p>
+        <p
+          *ngIf="token"
+          style="color:#0a7a0a;margin-top:12px;word-break:break-all;">
+          Logged in ✅ token saved to localStorage.
+        </p>
       </form>
-
-      <div *ngIf="error" style="margin-top: 12px; color: #b00020;">
-        {{ error }}
-      </div>
-
-      <div *ngIf="token" style="margin-top: 16px;">
-        <div style="font-weight: 600; margin-bottom: 6px;">✅ Logged in</div>
-        <div style="font-size: 12px; word-break: break-all; opacity: 0.85;">
-          Token saved to localStorage as <code>token</code>.
-        </div>
-      </div>
-
-      <div style="margin-top: 18px; font-size: 12px; opacity: 0.7;">
-        API: <code>{{ apiBase }}</code>
-      </div>
     </div>
   `,
 })
 export class LoginComponent {
+  private fb = inject(FormBuilder);
   private http = inject(HttpClient);
-
-  apiBase = environment.apiUrl; // should be .../api
-  email = "duongtrongnghia287@gmail.com";
-  password = "Password123@";
 
   loading = false;
   error = "";
   token = "";
 
-  onLogin() {
-    this.loading = true;
+  form = this.fb.group({
+    email: [
+      "duongtrongnghia287@gmail.com",
+      [Validators.required, Validators.email],
+    ],
+    password: ["Password123@", [Validators.required]],
+  });
+
+  submit() {
     this.error = "";
+    this.loading = true;
+
+    const body = this.form.getRawValue();
 
     this.http
-      .post<LoginResponse>(`${this.apiBase}/auth/login`, {
-        email: this.email,
-        password: this.password,
-      })
+      .post<any>(`${environment.apiUrl}/api/auth/login`, body)
       .subscribe({
         next: (res) => {
-          const t = res?.data?.accessToken || "";
-          if (!t) {
-            this.error = res?.message || "Login failed.";
+          const accessToken = res?.data?.accessToken;
+          if (!accessToken) {
+            this.error = "Login succeeded but token missing.";
             return;
           }
-          this.token = t;
-          localStorage.setItem("token", t);
+          localStorage.setItem("token", accessToken);
+          this.token = accessToken;
         },
         error: (err) => {
-          this.error =
-            err?.error?.message || "Request failed (check API URL / CORS).";
+          this.error = err?.error?.message || "Login failed";
         },
         complete: () => {
           this.loading = false;
