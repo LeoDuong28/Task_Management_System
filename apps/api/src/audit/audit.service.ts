@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditLog } from './audit.entity';
@@ -15,6 +15,8 @@ interface CreateAuditDto {
 
 @Injectable()
 export class AuditService {
+  private readonly logger = new Logger(AuditService.name);
+
   constructor(
     @InjectRepository(AuditLog)
     private auditRepo: Repository<AuditLog>
@@ -32,8 +34,8 @@ export class AuditService {
 
     const saved = await this.auditRepo.save(entry);
 
-    console.log(
-      `[AUDIT] ${new Date().toISOString()} | User: ${dto.userId} | Action: ${dto.action} | Resource: ${dto.resource} | ID: ${dto.resourceId || 'N/A'}`
+    this.logger.log(
+      `User: ${dto.userId} | Action: ${dto.action} | Resource: ${dto.resource} | ID: ${dto.resourceId || 'N/A'}`
     );
 
     return saved;
@@ -44,26 +46,6 @@ export class AuditService {
       order: { timestamp: 'DESC' },
       take: limit,
       relations: ['user'],
-    });
-  }
-
-  async findByUser(userId: string, limit = 50): Promise<IAuditLog[]> {
-    return this.auditRepo.find({
-      where: { userId },
-      order: { timestamp: 'DESC' },
-      take: limit,
-    });
-  }
-
-  async findByResource(resource: string, resourceId?: string): Promise<IAuditLog[]> {
-    const where: any = { resource };
-    if (resourceId) {
-      where.resourceId = resourceId;
-    }
-
-    return this.auditRepo.find({
-      where,
-      order: { timestamp: 'DESC' },
     });
   }
 }

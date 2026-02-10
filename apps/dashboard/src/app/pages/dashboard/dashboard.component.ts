@@ -1,6 +1,7 @@
-import { Component, inject, OnInit, signal, computed } from "@angular/core";
+import { Component, inject, OnInit, OnDestroy, signal, computed } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { Subject, takeUntil } from "rxjs";
 import {
   CdkDragDrop,
   CdkDrag,
@@ -504,7 +505,9 @@ import {
     </div>
   `,
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   authService = inject(AuthService);
   taskService = inject(TaskService);
   themeService = inject(ThemeService);
@@ -551,7 +554,12 @@ export class DashboardComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.taskService.loadTasks().subscribe();
+    this.taskService.loadTasks().pipe(takeUntil(this.destroy$)).subscribe();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getFilteredTasks(status: TaskStatus): Task[] {
@@ -589,6 +597,7 @@ export class DashboardComponent implements OnInit {
 
     this.taskService
       .reorderTask(task.id, event.currentIndex, newStatus)
+      .pipe(takeUntil(this.destroy$))
       .subscribe();
   }
 
@@ -608,7 +617,7 @@ export class DashboardComponent implements OnInit {
 
   deleteTask(id: string) {
     if (confirm("Are you sure you want to delete this task?")) {
-      this.taskService.deleteTask(id).subscribe();
+      this.taskService.deleteTask(id).pipe(takeUntil(this.destroy$)).subscribe();
     }
   }
 
@@ -618,10 +627,12 @@ export class DashboardComponent implements OnInit {
     if (this.editingTask()) {
       this.taskService
         .updateTask(this.editingTask()!.id, this.taskForm)
+        .pipe(takeUntil(this.destroy$))
         .subscribe(() => this.closeModal());
     } else {
       this.taskService
         .createTask(this.taskForm)
+        .pipe(takeUntil(this.destroy$))
         .subscribe(() => this.closeModal());
     }
   }
@@ -641,7 +652,7 @@ export class DashboardComponent implements OnInit {
   toggleAuditPanel() {
     this.showAuditPanel.update((v) => !v);
     if (this.showAuditPanel()) {
-      this.auditService.loadLogs().subscribe();
+      this.auditService.loadLogs().pipe(takeUntil(this.destroy$)).subscribe();
     }
   }
 

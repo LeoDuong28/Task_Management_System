@@ -100,7 +100,4 @@ export class TaskService {
       );
   }
 
-  getTasksByStatus(status: TaskStatus): Task[] {
-    return this.tasksSignal().filter((t) => t.status === status);
-  }
 }

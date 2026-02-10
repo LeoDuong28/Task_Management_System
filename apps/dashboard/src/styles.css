@@ -39,11 +39,6 @@
     @apply dark:text-surface-400 dark:hover:bg-surface-800;
   }
   
-  .btn-danger {
-    @apply bg-red-500 text-white hover:bg-red-600;
-    @apply focus:ring-red-500;
-  }
-  
   .input {
     @apply w-full px-4 py-2.5 rounded-xl border border-surface-200 bg-white;
     @apply text-surface-900 placeholder:text-surface-400;
@@ -59,16 +54,6 @@
   
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-  
-  .badge-todo {
-    @apply bg-surface-100 text-surface-600;
-    @apply dark:bg-surface-700 dark:text-surface-300;
-  }
-  
-  .badge-progress {
-    @apply bg-blue-100 text-blue-700;
-    @apply dark:bg-blue-900/30 dark:text-blue-400;
   }
   
   .badge-done {

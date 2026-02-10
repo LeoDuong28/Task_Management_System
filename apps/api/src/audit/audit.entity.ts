@@ -5,10 +5,13 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../users/user.entity';
 
 @Entity('audit_logs')
+@Index(['userId'])
+@Index(['timestamp'])
 export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;

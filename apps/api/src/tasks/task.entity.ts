@@ -6,12 +6,15 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { TaskStatus, TaskPriority, TaskCategory } from '@libs/data';
 import { User } from '../users/user.entity';
 import { Organization } from '../organizations/organization.entity';
 
 @Entity('tasks')
+@Index(['organizationId', 'status'])
+@Index(['ownerId'])
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   id: string;

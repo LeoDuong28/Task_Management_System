@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
@@ -38,12 +38,21 @@ import { Role } from '@libs/data';
       imports: [ConfigModule],
       inject: [ConfigService],
       global: true,
-      useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET') || 'supersecretkey',
-        signOptions: {
-          expiresIn: config.get('JWT_EXPIRY') || '24h',
-        },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>('JWT_SECRET');
+        if (!secret) {
+          Logger.warn(
+            'JWT_SECRET not set in environment. Using default secret. Set JWT_SECRET in .env for production.',
+            'AppModule',
+          );
+        }
+        return {
+          secret: secret || 'supersecretkey',
+          signOptions: {
+            expiresIn: config.get('JWT_EXPIRY') || '24h',
+          },
+        };
+      },
     }),
     AuthModule,
     TasksModule,
@@ -53,6 +62,8 @@ import { Role } from '@libs/data';
   ],
 })
 export class AppModule implements OnModuleInit {
+  private readonly logger = new Logger(AppModule.name);
+
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Organization) private orgRepo: Repository<Organization>,
@@ -63,29 +74,31 @@ export class AppModule implements OnModuleInit {
   }
 
   private async seedAdmin() {
-    const adminEmail = 'duongtrongnghia287@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL || 'duongtrongnghia287@gmail.com';
     const existing = await this.userRepo.findOne({ where: { email: adminEmail } });
-    
+
     if (!existing) {
-      let org = await this.orgRepo.findOne({ where: { name: 'Leo Duong Organization' } });
-      
+      const orgName = process.env.ADMIN_ORG || 'Leo Duong Organization';
+      let org = await this.orgRepo.findOne({ where: { name: orgName } });
+
       if (!org) {
-        org = this.orgRepo.create({ name: 'Leo Duong Organization' });
+        org = this.orgRepo.create({ name: orgName });
         await this.orgRepo.save(org);
       }
 
-      const hashedPassword = await bcrypt.hash('Password123@', 12);
-      
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Password123@';
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
       const admin = this.userRepo.create({
         email: adminEmail,
-        name: 'Leo Duong',
+        name: process.env.ADMIN_NAME || 'Leo Duong',
         password: hashedPassword,
         role: Role.OWNER,
         organizationId: org.id,
       });
 
       await this.userRepo.save(admin);
-      console.log('Admin user seeded: duongtrongnghia287@gmail.com');
+      this.logger.log(`Admin user seeded: ${adminEmail}`);
     }
   }
 }
