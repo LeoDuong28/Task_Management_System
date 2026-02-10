@@ -70,35 +70,36 @@ export class AppModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.seedAdmin();
+    await this.seedDemoUsers();
   }
 
-  private async seedAdmin() {
-    const adminEmail = process.env.ADMIN_EMAIL || 'duongtrongnghia287@gmail.com';
-    const existing = await this.userRepo.findOne({ where: { email: adminEmail } });
+  private async seedDemoUsers() {
+    let org = await this.orgRepo.findOne({ where: { name: 'Demo Organization' } });
 
-    if (!existing) {
-      const orgName = process.env.ADMIN_ORG || 'Leo Duong Organization';
-      let org = await this.orgRepo.findOne({ where: { name: orgName } });
+    if (!org) {
+      org = this.orgRepo.create({ name: 'Demo Organization' });
+      await this.orgRepo.save(org);
+    }
 
-      if (!org) {
-        org = this.orgRepo.create({ name: orgName });
-        await this.orgRepo.save(org);
+    const demoUsers = [
+      { email: 'admin@demo.com', password: 'admin123', name: 'Admin User', role: Role.OWNER },
+      { email: 'viewer@demo.com', password: 'viewer123', name: 'Viewer User', role: Role.VIEWER },
+    ];
+
+    for (const demo of demoUsers) {
+      const existing = await this.userRepo.findOne({ where: { email: demo.email } });
+      if (!existing) {
+        const hashedPassword = await bcrypt.hash(demo.password, 12);
+        const user = this.userRepo.create({
+          email: demo.email,
+          name: demo.name,
+          password: hashedPassword,
+          role: demo.role,
+          organizationId: org.id,
+        });
+        await this.userRepo.save(user);
+        this.logger.log(`Demo user seeded: ${demo.email}`);
       }
-
-      const adminPassword = process.env.ADMIN_PASSWORD || 'Password123@';
-      const hashedPassword = await bcrypt.hash(adminPassword, 12);
-
-      const admin = this.userRepo.create({
-        email: adminEmail,
-        name: process.env.ADMIN_NAME || 'Leo Duong',
-        password: hashedPassword,
-        role: Role.OWNER,
-        organizationId: org.id,
-      });
-
-      await this.userRepo.save(admin);
-      this.logger.log(`Admin user seeded: ${adminEmail}`);
     }
   }
 }

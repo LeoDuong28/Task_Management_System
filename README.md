@@ -38,12 +38,14 @@ npm start
 
 5. Open http://localhost:4200 in your browser
 
-### Default Admin Account
+### Demo Accounts
 
-The system comes with a pre-configured admin account:
+The system seeds two demo accounts on first startup:
 
-- **Email:** duongtrongnghia287@gmail.com
-- **Password:** Password123@
+| Role   | Email            | Password   | Access                                     |
+| ------ | ---------------- | ---------- | ------------------------------------------ |
+| Owner  | admin@demo.com   | admin123   | Full access (create, edit, delete, audit)  |
+| Viewer | viewer@demo.com  | viewer123  | Read-only access                           |
 
 ## Environment Setup
 

@@ -9,6 +9,8 @@
     "api:start": "node dist/apps/api/main.js",
     "dashboard:dev": "cd apps/dashboard && ng serve",
     "dashboard:build": "cd apps/dashboard && ng build",
+    "build": "npm run api:build && npm run dashboard:build",
+    "start": "node dist/apps/api/main.js",
     "test:api": "jest --config apps/api/jest.config.js",
     "test:dashboard": "cd apps/dashboard && ng test",
     "lint": "eslint . --ext .ts,.tsx"
