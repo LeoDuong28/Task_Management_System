@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { OrganizationsService } from './organizations.service';
-import { ApiResponse, IOrganization, JwtPayload, Permission, Role } from '@libs/data';
+import { ApiResponse, IOrganization, JwtPayload, Permission, Role, CreateSubOrgDto } from '@libs/data';
 import {
   JwtAuthGuard,
   RolesGuard,
@@ -34,11 +34,11 @@ export class OrganizationsController {
   @Roles(Role.OWNER)
   @Permissions(Permission.MANAGE_ORG)
   async createSubOrganization(
-    @Body() body: { name: string },
+    @Body() dto: CreateSubOrgDto,
     @Req() req: AuthRequest
   ): Promise<ApiResponse<IOrganization>> {
     const org = await this.orgsService.createSubOrganization(
-      body.name,
+      dto.name,
       req.user.organizationId
     );
     return {

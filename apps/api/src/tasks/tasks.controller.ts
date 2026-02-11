@@ -14,12 +14,12 @@ import { TasksService } from './tasks.service';
 import {
   CreateTaskDto,
   UpdateTaskDto,
+  ReorderTaskDto,
   ApiResponse,
   ITask,
   Permission,
   Role,
   JwtPayload,
-  TaskStatus,
 } from '@libs/data';
 import {
   JwtAuthGuard,
@@ -111,13 +111,13 @@ export class TasksController {
   @Permissions(Permission.UPDATE_TASK)
   async reorder(
     @Param('id') id: string,
-    @Body() body: { order: number; status: TaskStatus },
+    @Body() dto: ReorderTaskDto,
     @Req() req: AuthRequest
   ): Promise<ApiResponse<ITask[]>> {
     const tasks = await this.tasksService.reorder(
       id,
-      body.order,
-      body.status,
+      dto.order,
+      dto.status,
       req.user
     );
     return {

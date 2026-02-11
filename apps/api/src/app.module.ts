@@ -2,6 +2,9 @@ import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -29,7 +32,7 @@ import { Role } from '@libs/data';
         type: 'sqlite',
         database: config.get('DB_PATH') || 'taskdb.sqlite',
         entities: [User, Organization, Task, AuditLog],
-        synchronize: true,
+        synchronize: config.get('NODE_ENV') !== 'production' || config.get('SEED_DEMO_USERS') === 'true',
         logging: config.get('NODE_ENV') === 'development',
       }),
     }),
@@ -40,9 +43,12 @@ import { Role } from '@libs/data';
       global: true,
       useFactory: (config: ConfigService) => {
         const secret = config.get<string>('JWT_SECRET');
+        if (!secret && config.get('NODE_ENV') === 'production') {
+          throw new Error('JWT_SECRET must be set in production environment');
+        }
         if (!secret) {
           Logger.warn(
-            'JWT_SECRET not set in environment. Using default secret. Set JWT_SECRET in .env for production.',
+            'JWT_SECRET not set. Using default secret for development only.',
             'AppModule',
           );
         }
@@ -53,6 +59,11 @@ import { Role } from '@libs/data';
           },
         };
       },
+    }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'public'),
+      exclude: ['/api/(.*)'],
     }),
     AuthModule,
     TasksModule,
@@ -74,6 +85,10 @@ export class AppModule implements OnModuleInit {
   }
 
   private async seedDemoUsers() {
+    if (process.env.NODE_ENV === 'production' && process.env.SEED_DEMO_USERS !== 'true') {
+      return;
+    }
+
     let org = await this.orgRepo.findOne({ where: { name: 'Demo Organization' } });
 
     if (!org) {

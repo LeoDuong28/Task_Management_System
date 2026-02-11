@@ -1,8 +1,14 @@
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { UsersService } from './users.service';
-import { ApiResponse, IUser, JwtPayload } from '@libs/data';
-import { JwtAuthGuard } from '@libs/auth';
+import { ApiResponse, IUser, JwtPayload, Permission, Role } from '@libs/data';
+import {
+  JwtAuthGuard,
+  RolesGuard,
+  PermissionsGuard,
+  Roles,
+  Permissions,
+} from '@libs/auth';
 
 interface AuthRequest extends Request {
   user: JwtPayload;
@@ -23,6 +29,9 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @Roles(Role.OWNER, Role.ADMIN)
+  @Permissions(Permission.MANAGE_USERS)
   async findAll(@Req() req: AuthRequest): Promise<ApiResponse<Omit<IUser, 'password'>[]>> {
     const users = await this.usersService.findAll(req.user);
     return {

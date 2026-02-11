@@ -101,5 +101,3 @@ export class PermissionsGuard implements CanActivate {
     return true;
   }
 }
-
-export { JwtAuthGuard, RolesGuard, PermissionsGuard };

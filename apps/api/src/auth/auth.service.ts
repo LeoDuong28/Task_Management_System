@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../users/user.entity';
@@ -31,7 +31,7 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<AuthResponse> {
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
     if (existing) {
-      throw new ConflictException('Email already registered');
+      throw new ConflictException('Registration could not be completed');
     }
 
     let organization: Organization;
@@ -40,8 +40,10 @@ export class AuthService {
       organization = this.orgRepo.create({ name: dto.organizationName });
       await this.orgRepo.save(organization);
     } else {
-      organization = await this.orgRepo.findOne({ where: { parentId: undefined as any } });
-      if (!organization) {
+      const rootOrg = await this.orgRepo.findOne({ where: { parentId: IsNull() } });
+      if (rootOrg) {
+        organization = rootOrg;
+      } else {
         organization = this.orgRepo.create({ name: 'Default Organization' });
         await this.orgRepo.save(organization);
       }

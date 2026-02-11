@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, DataSource } from 'typeorm';
 import { Task } from './task.entity';
 import {
   CreateTaskDto,
@@ -22,6 +22,7 @@ export class TasksService {
   constructor(
     @InjectRepository(Task)
     private taskRepo: Repository<Task>,
+    private dataSource: DataSource,
     private auditService: AuditService
   ) {}
 
@@ -66,14 +67,6 @@ export class TasksService {
       orgIds.push(user.parentOrganizationId);
     }
 
-    if (user.role === Role.VIEWER) {
-      return this.taskRepo.find({
-        where: { organizationId: In(orgIds) },
-        order: { status: 'ASC', order: 'ASC' },
-        relations: ['owner'],
-      });
-    }
-
     return this.taskRepo.find({
       where: { organizationId: In(orgIds) },
       order: { status: 'ASC', order: 'ASC' },
@@ -115,10 +108,12 @@ export class TasksService {
       }
     }
 
-    Object.assign(task, {
-      ...dto,
-      dueDate: dto.dueDate ? new Date(dto.dueDate) : task.dueDate,
-    });
+    if (dto.title !== undefined) task.title = dto.title;
+    if (dto.description !== undefined) task.description = dto.description;
+    if (dto.status !== undefined) task.status = dto.status;
+    if (dto.priority !== undefined) task.priority = dto.priority;
+    if (dto.category !== undefined) task.category = dto.category;
+    if (dto.dueDate !== undefined) task.dueDate = new Date(dto.dueDate);
 
     const updated = await this.taskRepo.save(task);
 
@@ -175,49 +170,53 @@ export class TasksService {
     task.status = newStatus;
     task.order = newOrder;
 
-    if (oldStatus !== newStatus) {
-      await this.taskRepo
-        .createQueryBuilder()
-        .update(Task)
-        .set({ order: () => '"order" - 1' })
-        .where('organizationId = :orgId', { orgId: user.organizationId })
-        .andWhere('status = :status', { status: oldStatus })
-        .andWhere('order > :oldOrder', { oldOrder })
-        .execute();
+    await this.dataSource.transaction(async (manager) => {
+      const taskRepo = manager.getRepository(Task);
 
-      await this.taskRepo
-        .createQueryBuilder()
-        .update(Task)
-        .set({ order: () => '"order" + 1' })
-        .where('organizationId = :orgId', { orgId: user.organizationId })
-        .andWhere('status = :status', { status: newStatus })
-        .andWhere('order >= :newOrder', { newOrder })
-        .execute();
-    } else {
-      if (newOrder > oldOrder) {
-        await this.taskRepo
+      if (oldStatus !== newStatus) {
+        await taskRepo
           .createQueryBuilder()
           .update(Task)
           .set({ order: () => '"order" - 1' })
           .where('organizationId = :orgId', { orgId: user.organizationId })
           .andWhere('status = :status', { status: oldStatus })
           .andWhere('order > :oldOrder', { oldOrder })
-          .andWhere('order <= :newOrder', { newOrder })
           .execute();
-      } else {
-        await this.taskRepo
+
+        await taskRepo
           .createQueryBuilder()
           .update(Task)
           .set({ order: () => '"order" + 1' })
           .where('organizationId = :orgId', { orgId: user.organizationId })
-          .andWhere('status = :status', { status: oldStatus })
+          .andWhere('status = :status', { status: newStatus })
           .andWhere('order >= :newOrder', { newOrder })
-          .andWhere('order < :oldOrder', { oldOrder })
           .execute();
+      } else {
+        if (newOrder > oldOrder) {
+          await taskRepo
+            .createQueryBuilder()
+            .update(Task)
+            .set({ order: () => '"order" - 1' })
+            .where('organizationId = :orgId', { orgId: user.organizationId })
+            .andWhere('status = :status', { status: oldStatus })
+            .andWhere('order > :oldOrder', { oldOrder })
+            .andWhere('order <= :newOrder', { newOrder })
+            .execute();
+        } else {
+          await taskRepo
+            .createQueryBuilder()
+            .update(Task)
+            .set({ order: () => '"order" + 1' })
+            .where('organizationId = :orgId', { orgId: user.organizationId })
+            .andWhere('status = :status', { status: oldStatus })
+            .andWhere('order >= :newOrder', { newOrder })
+            .andWhere('order < :oldOrder', { oldOrder })
+            .execute();
+        }
       }
-    }
 
-    await this.taskRepo.save(task);
+      await taskRepo.save(task);
+    });
 
     return this.findAll(user);
   }

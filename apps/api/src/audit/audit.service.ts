@@ -41,8 +41,9 @@ export class AuditService {
     return saved;
   }
 
-  async findAll(limit = 100): Promise<IAuditLog[]> {
+  async findAll(organizationId: string, limit = 100): Promise<IAuditLog[]> {
     return this.auditRepo.find({
+      where: { user: { organizationId } },
       order: { timestamp: 'DESC' },
       take: limit,
       relations: ['user'],

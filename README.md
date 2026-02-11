@@ -312,7 +312,7 @@ Request:
   "description": "Users can't log in on mobile",
   "priority": "high",
   "category": "work",
-  "dueDate": "2024-02-15"
+  "dueDate": "2026-03-15"
 }
 ```
 
@@ -405,13 +405,6 @@ The current setup is vulnerable to CSRF attacks. Would add:
 
 - CSRF tokens for all state-changing requests
 - SameSite=Strict on cookies
-
-**Rate Limiting**
-
-Need to add rate limiting to prevent:
-
-- Brute force login attempts
-- API abuse
 
 ### Role System Improvements
 
